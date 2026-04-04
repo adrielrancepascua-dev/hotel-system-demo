@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { roomStatusStyles } from "@/lib/constants";
 import { buildDemoRequests, buildDemoRooms, guestNameForRoom } from "@/lib/demo";
@@ -41,6 +41,7 @@ const summaryLabels: Array<{ key: RoomStatus; label: string }> = [
 
 export function RoomOperationsBoard({ mode }: { mode: BoardMode }) {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const actionsPanelRef = useRef<HTMLElement | null>(null);
 
   const [rooms, setRooms] = useState<RoomRecord[]>([]);
   const [pendingRequests, setPendingRequests] = useState(0);
@@ -141,6 +142,24 @@ export function RoomOperationsBoard({ mode }: { mode: BoardMode }) {
   }, [fetchPendingRequests, mode, supabase]);
 
   const selectedRoom = rooms.find((room) => room.id === selectedRoomId) ?? null;
+
+  useEffect(() => {
+    if (selectedRoomId === null) {
+      return;
+    }
+
+    if (!window.matchMedia("(max-width: 1023px)").matches) {
+      return;
+    }
+
+    const rafId = window.requestAnimationFrame(() => {
+      actionsPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+    };
+  }, [selectedRoomId]);
 
   const stats = useMemo(() => {
     return rooms.reduce<Record<RoomStatus, number>>(
@@ -364,7 +383,10 @@ export function RoomOperationsBoard({ mode }: { mode: BoardMode }) {
             })}
           </div>
 
-          <aside className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <aside
+            ref={actionsPanelRef}
+            className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+          >
             {selectedRoom ? (
               <>
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">

@@ -145,7 +145,10 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
   }
 
   return (
-    <section className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-5 px-4 py-6">
+    <main
+      id="main-content"
+      className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-5 px-4 py-6 pb-36"
+    >
       <header className="rounded-2xl bg-slate-900 px-4 py-5 text-white shadow-lg dark:bg-slate-800">
         <p className="text-xs uppercase tracking-[0.2em] text-slate-300">Room Concierge</p>
         <h1 className="mt-2 text-2xl font-bold">Room {roomNumber}</h1>
@@ -163,7 +166,11 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
         </p>
       )}
 
-      <div className="space-y-3">
+      <section className="sticky bottom-2 z-20 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
+        <h2 className="px-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+          Quick Concierge Actions
+        </h2>
+        <div className="mt-2 space-y-2">
         {requestButtons.map((button) => (
           <button
             key={button.type}
@@ -172,12 +179,13 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
             onClick={() => {
               void submitRequest(button.type);
             }}
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-left text-base font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            className="staff-mode-action text-left border border-slate-300 bg-white text-slate-900 shadow-sm hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           >
             {button.label}
           </button>
         ))}
-      </div>
+        </div>
+      </section>
 
       {message && (
         <p className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200">
@@ -225,6 +233,6 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
           ))}
         </ul>
       </article>
-    </section>
+    </main>
   );
 }

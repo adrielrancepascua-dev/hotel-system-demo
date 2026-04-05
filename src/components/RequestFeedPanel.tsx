@@ -119,7 +119,7 @@ export function RequestFeedPanel() {
       ) : requests.length === 0 ? (
         <p className="text-sm text-slate-600 dark:text-slate-300">No guest requests right now.</p>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {requests.map((request) => (
             <article
               key={request.id}

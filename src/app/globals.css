@@ -1,0 +1,396 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+:root {
+  --background: #f5f1ea;
+  --foreground: #1a2332;
+  --surface: #fffcf7;
+  --surface-elevated: #ffffff;
+  --border: #e4ddd2;
+  --border-subtle: #ede8e0;
+  --navy: #1a2332;
+  --navy-deep: #0f1724;
+  --gold: #b8956a;
+  --gold-light: #d4b896;
+  --gold-muted: #e8dcc8;
+  --cream: #faf8f4;
+  --muted: #6b7280;
+  --shadow-color: 26 35 50;
+}
+
+html[data-theme="dark"] {
+  --background: #0c1219;
+  --foreground: #e8e4dc;
+  --surface: #141c27;
+  --surface-elevated: #1a2433;
+  --border: #2a3545;
+  --border-subtle: #1f2a38;
+  --navy: #e8e4dc;
+  --navy-deep: #0a0f16;
+  --gold: #c9a87c;
+  --gold-light: #dfc9a8;
+  --gold-muted: #3d3428;
+  --cream: #1a2433;
+  --muted: #9ca3af;
+  --shadow-color: 0 0 0;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-border: var(--border);
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-gold-muted: var(--gold-muted);
+  --color-cream: var(--cream);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-geist-sans);
+  --font-display: var(--font-cormorant);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(184, 149, 106, 0.08), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(26, 35, 50, 0.04), transparent);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
+}
+
+html[data-theme="dark"] body {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(201, 168, 124, 0.06), transparent),
+    radial-gradient(ellipse 60% 40% at 0% 100%, rgba(26, 35, 50, 0.3), transparent);
+}
+
+@layer base {
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 3px rgba(184, 149, 106, 0.45);
+  }
+}
+
+@layer components {
+  .font-display {
+    font-family: var(--font-cormorant), Georgia, "Times New Roman", serif;
+  }
+
+  .hotel-page {
+    min-height: 100vh;
+    background-color: var(--background);
+  }
+
+  .hotel-card {
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    background-color: var(--surface-elevated);
+    box-shadow:
+      0 1px 2px rgba(var(--shadow-color), 0.04),
+      0 4px 16px rgba(var(--shadow-color), 0.06);
+  }
+
+  .hotel-card-accent {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hotel-card-accent::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold));
+  }
+
+  .hotel-stat {
+    border-radius: 0.875rem;
+    border: 1px solid var(--border);
+    background-color: var(--surface-elevated);
+    padding: 1rem 1.25rem;
+    box-shadow: 0 1px 3px rgba(var(--shadow-color), 0.05);
+  }
+
+  .hotel-stat-value {
+    font-family: var(--font-cormorant), Georgia, serif;
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--navy);
+  }
+
+  .hotel-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .hotel-btn {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.625rem;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25;
+    transition:
+      background-color 180ms ease,
+      color 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      transform 180ms ease;
+  }
+
+  .hotel-btn:active {
+    transform: scale(0.98);
+  }
+
+  .hotel-btn-primary {
+    background-color: var(--navy-deep);
+    color: #f8f6f2;
+    border: 1px solid var(--navy-deep);
+  }
+
+  .hotel-btn-primary:hover {
+    background-color: #1e2d42;
+    box-shadow: 0 4px 12px rgba(15, 23, 36, 0.25);
+  }
+
+  html[data-theme="dark"] .hotel-btn-primary {
+    background-color: var(--gold-muted);
+    color: var(--gold-light);
+    border-color: var(--gold);
+  }
+
+  html[data-theme="dark"] .hotel-btn-primary:hover {
+    background-color: #4a3f30;
+  }
+
+  .hotel-btn-secondary {
+    background-color: var(--surface);
+    color: var(--navy);
+    border: 1px solid var(--border);
+  }
+
+  .hotel-btn-secondary:hover {
+    border-color: var(--gold);
+    background-color: var(--cream);
+  }
+
+  .hotel-btn-gold {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--navy-deep);
+    border: 1px solid var(--gold);
+    font-weight: 700;
+  }
+
+  .hotel-btn-gold:hover {
+    box-shadow: 0 4px 16px rgba(184, 149, 106, 0.35);
+  }
+
+  .hotel-nav-link {
+    display: inline-flex;
+    min-height: 2.5rem;
+    align-items: center;
+    border-radius: 9999px;
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--muted);
+    border: 1px solid transparent;
+    transition: all 180ms ease;
+  }
+
+  .hotel-nav-link:hover {
+    color: var(--navy);
+    background-color: var(--cream);
+    border-color: var(--border-subtle);
+  }
+
+  .hotel-nav-link-active {
+    color: var(--navy-deep);
+    background-color: var(--gold-muted);
+    border-color: var(--gold);
+    font-weight: 600;
+  }
+
+  html[data-theme="dark"] .hotel-nav-link-active {
+    color: var(--gold-light);
+    background-color: rgba(201, 168, 124, 0.12);
+  }
+
+  .hotel-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, var(--navy-deep) 0%, #1e3048 50%, #243a52 100%);
+    color: #f8f6f2;
+    box-shadow: 0 8px 32px rgba(15, 23, 36, 0.2);
+  }
+
+  .hotel-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 85% 15%, rgba(184, 149, 106, 0.2), transparent 40%),
+      radial-gradient(circle at 10% 80%, rgba(255, 255, 255, 0.04), transparent 35%);
+    pointer-events: none;
+  }
+
+  .hotel-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.5;
+  }
+
+  .hotel-alert {
+    border-radius: 0.75rem;
+    border: 1px solid;
+    padding: 0.875rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .hotel-alert-info {
+    border-color: rgba(184, 149, 106, 0.4);
+    background-color: rgba(184, 149, 106, 0.08);
+    color: var(--navy);
+  }
+
+  html[data-theme="dark"] .hotel-alert-info {
+    background-color: rgba(201, 168, 124, 0.1);
+    color: var(--gold-light);
+  }
+
+  .hotel-alert-warning {
+    border-color: rgba(217, 119, 6, 0.35);
+    background-color: rgba(251, 191, 36, 0.1);
+    color: #92400e;
+  }
+
+  html[data-theme="dark"] .hotel-alert-warning {
+    color: #fbbf24;
+    background-color: rgba(251, 191, 36, 0.08);
+  }
+
+  .hotel-alert-error {
+    border-color: rgba(225, 29, 72, 0.3);
+    background-color: rgba(244, 63, 94, 0.08);
+    color: #be123c;
+  }
+
+  html[data-theme="dark"] .hotel-alert-error {
+    color: #fb7185;
+    background-color: rgba(244, 63, 94, 0.1);
+  }
+
+  .hotel-alert-success {
+    border-color: rgba(5, 150, 105, 0.3);
+    background-color: rgba(16, 185, 129, 0.08);
+    color: #047857;
+  }
+
+  html[data-theme="dark"] .hotel-alert-success {
+    color: #6ee7b7;
+    background-color: rgba(16, 185, 129, 0.1);
+  }
+
+  .staff-mode-card {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .staff-mode-action {
+    min-height: 48px;
+    width: 100%;
+    border-radius: 0.625rem;
+    padding: 0.75rem 1rem;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.25;
+    transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .staff-mode-action:focus-visible {
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 2px rgba(184, 149, 106, 0.45);
+  }
+
+  .staff-mode-action-primary {
+    background-color: var(--navy-deep);
+    color: #f8f6f2;
+    border: 1px solid var(--navy-deep);
+  }
+
+  .staff-mode-action-primary:hover:not(:disabled) {
+    background-color: #1e2d42;
+  }
+
+  html[data-theme="dark"] .staff-mode-action-primary {
+    background-color: rgba(201, 168, 124, 0.15);
+    color: var(--gold-light);
+    border-color: var(--gold);
+  }
+
+  .staff-mode-action-secondary {
+    background-color: var(--surface);
+    color: var(--navy);
+    border: 1px solid var(--border);
+  }
+
+  .staff-mode-action-secondary:hover:not(:disabled) {
+    border-color: var(--gold);
+    background-color: var(--cream);
+  }
+
+  .staff-mode-badge {
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.02em;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .hotel-feature-card {
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    background-color: var(--surface-elevated);
+    padding: 1.5rem;
+    transition: all 220ms ease;
+  }
+
+  .hotel-feature-card:hover {
+    border-color: var(--gold);
+    box-shadow: 0 8px 24px rgba(var(--shadow-color), 0.08);
+    transform: translateY(-2px);
+  }
+
+  .hotel-feature-icon {
+    display: flex;
+    height: 2.75rem;
+    width: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, var(--gold-muted), transparent);
+    color: var(--gold);
+    border: 1px solid rgba(184, 149, 106, 0.25);
+  }
+}

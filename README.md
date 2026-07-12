@@ -1,39 +1,32 @@
-# Harborlight Hotel Operations Demo
+# Harborlight Hotel Operations Suite
 
-Demo hotel management system built with Next.js App Router, TypeScript, TailwindCSS, and Supabase.
+Demo hotel management system built with Next.js App Router, TypeScript, TailwindCSS, and optional Supabase.
 
 ## Features
 
-- Room status dashboard with color-coded cards
-- Front desk actions: check in, check out, mark reserved, report maintenance
-- Housekeeping actions: start cleaning, finish cleaning, report issue
-- Realtime room and request updates across pages via Supabase subscriptions
-- Guest QR concierge flow at `/room/[roomNumber]`
-- Staff request feed with mark-completed workflow
-- Summary stats for occupied, ready, cleaning, maintenance, and needs cleaning
+- **Unified Operations console** — check-in, checkout, cleaning, and maintenance on one board (status-driven actions, no role-tab hopping)
+- **Reservations** — guest name/contact, stay dates, source (walk-in / OTA / phone)
+- **Room types & rates** — Standard, Deluxe, Suite with capacity and nightly rates
+- **Billing / folios** — auto room-night charges, incidentals, payments, printable receipts
+- **Staff shift picker** — attributes who completed cleaning and guest requests
+- **Owner reports** — occupancy, ADR, RevPAR, revenue today/MTD, breakdowns by type & source
+- **Guest QR concierge** — bill view, digital checkout request, notes + photo attachments
+- Demo mode persists in `localStorage` (no Supabase required)
 
 ## Routes
 
-- `/dashboard` Manager overview with role switcher
-- `/frontdesk` Front desk action board
-- `/housekeeping` Housekeeping action board
-- `/room/[roomNumber]` Guest mobile concierge page
-- `/requests` Staff request feed
+| Route | Purpose |
+|-------|---------|
+| `/ops` | Unified operations board |
+| `/reservations` | Bookings list & create |
+| `/billing` | Folios, charges, payments |
+| `/billing/[id]` | Receipt / print view |
+| `/reports` | Owner metrics |
+| `/requests` | Staff request feed |
+| `/room/[roomNumber]` | Guest mobile concierge |
+| `/frontdesk`, `/housekeeping`, `/dashboard` | Redirect into `/ops` with filters |
 
-## Database Setup (Supabase)
-
-1. Create a Supabase project.
-2. Open the SQL editor and run `supabase/schema.sql`.
-3. Copy `.env.example` to `.env.local` and fill in values:
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-```
-
-If env vars are missing, the app runs in local demo mode with generated room/request data.
-
-## Run Locally
+## Run locally
 
 ```bash
 npm install
@@ -42,9 +35,21 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-## Demo Data
+## Supabase (optional)
 
-- Rooms: `101` to `120`
-- Realistic status mix: ready, occupied, cleaning, needs cleaning, maintenance
-- Sample guest requests included in SQL seed
-- Placeholder guest names shown for occupied rooms
+1. Run `supabase/schema.sql` in the SQL editor.
+2. Copy env vars:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+Without env vars, the app uses the in-browser DemoStore.
+
+## Demo tips
+
+1. Set **On shift** staff in the header.
+2. Open **Ops** → select a Ready room → **Check In Guest**.
+3. Open **Billing** to take payment; open **Reports** to see ADR / RevPAR move.
+4. Visit `/room/108` as the guest to view the bill and send photo requests.

@@ -1,21 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { ConciergeIcon, HotelIcon } from "@/components/icons";
 import { requestTypeLabels, roomStatusStyles } from "@/lib/constants";
-import { buildDemoRooms } from "@/lib/demo";
+import { formatMoney } from "@/lib/demo";
 import {
-  getSupabaseBrowserClient,
-  hasSupabaseConfig,
-} from "@/lib/supabase/client";
-import type { RequestRecord, RequestType, RoomStatus } from "@/lib/types";
+  folioBalance,
+  getActiveReservation,
+  getFolioForReservation,
+} from "@/lib/metrics";
+import { useDemoStore } from "@/lib/store/DemoStore";
+import type { RequestType } from "@/lib/types";
 
 const requestButtons: Array<{ type: RequestType; label: string; emoji: string }> = [
   { type: "towels", label: "Request Towels", emoji: "🛁" },
   { type: "housekeeping", label: "Request Housekeeping", emoji: "✨" },
   { type: "late_checkout", label: "Late Checkout", emoji: "🕐" },
   { type: "food", label: "Order Food", emoji: "🍽️" },
+  { type: "digital_checkout", label: "Request Checkout", emoji: "🚪" },
   { type: "hotel_services", label: "Hotel Services", emoji: "🏨" },
 ];
 
@@ -27,130 +30,84 @@ const hotelServices = [
 ];
 
 export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const { state, hydrated, createRequest } = useDemoStore();
 
   const [workingType, setWorkingType] = useState<RequestType | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [roomStatus, setRoomStatus] = useState<RoomStatus | null>(null);
-  const [recentRequests, setRecentRequests] = useState<RequestRecord[]>([]);
+  const [notes, setNotes] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [showBill, setShowBill] = useState(false);
+  const [selectedType, setSelectedType] = useState<RequestType | null>(null);
 
-  const fetchGuestData = useCallback(async () => {
-    if (!supabase) {
-      const demoRoom = buildDemoRooms().find((room) => room.room_number === roomNumber);
-      setRoomStatus(demoRoom?.status ?? "ready");
+  const room = state.rooms.find((r) => r.room_number === roomNumber);
+  const reservation = room
+    ? getActiveReservation(room.id, state.reservations)
+    : undefined;
+  const folio = reservation
+    ? getFolioForReservation(reservation.id, state.folios)
+    : undefined;
+  const charges = folio
+    ? state.charges.filter((c) => c.folio_id === folio.id)
+    : [];
+  const payments = folio
+    ? state.payments.filter((p) => p.folio_id === folio.id)
+    : [];
+  const balance = folio ? folioBalance(folio.id, state.charges, state.payments) : 0;
+
+  const recentRequests = useMemo(
+    () =>
+      state.requests
+        .filter((r) => r.room_number === roomNumber)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 5),
+    [state.requests, roomNumber],
+  );
+
+  const statusTheme = room ? roomStatusStyles[room.status] : null;
+
+  function handlePhotoChange(file: File | null) {
+    if (!file) {
+      setPhotoUrl(null);
       return;
     }
-
-    const [{ data: roomData }, { data: requestData }] = await Promise.all([
-      supabase
-        .from("rooms")
-        .select("status")
-        .eq("room_number", roomNumber)
-        .maybeSingle(),
-      supabase
-        .from("requests")
-        .select("id, room_number, request_type, status, created_at")
-        .eq("room_number", roomNumber)
-        .order("created_at", { ascending: false })
-        .limit(5),
-    ]);
-
-    setRoomStatus((roomData?.status as RoomStatus | undefined) ?? "ready");
-    setRecentRequests((requestData ?? []) as RequestRecord[]);
-  }, [roomNumber, supabase]);
-
-  useEffect(() => {
-    void fetchGuestData();
-  }, [fetchGuestData]);
-
-  useEffect(() => {
-    if (!supabase) {
-      return;
-    }
-
-    const roomChannel = supabase
-      .channel(`guest-room-${roomNumber}-${Date.now()}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "rooms",
-          filter: `room_number=eq.${roomNumber}`,
-        },
-        () => {
-          void fetchGuestData();
-        },
-      )
-      .subscribe();
-
-    const requestsChannel = supabase
-      .channel(`guest-requests-${roomNumber}-${Date.now()}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "requests",
-          filter: `room_number=eq.${roomNumber}`,
-        },
-        () => {
-          void fetchGuestData();
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(roomChannel);
-      void supabase.removeChannel(requestsChannel);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPhotoUrl(typeof reader.result === "string" ? reader.result : null);
     };
-  }, [fetchGuestData, roomNumber, supabase]);
+    reader.readAsDataURL(file);
+  }
 
-  async function submitRequest(type: RequestType) {
+  function submitRequest(type: RequestType) {
     setMessage(null);
-    setError(null);
     setWorkingType(type);
 
-    if (!supabase) {
-      const localRequest: RequestRecord = {
-        id: Date.now(),
-        room_number: roomNumber,
-        request_type: type,
-        status: "pending",
-        created_at: new Date().toISOString(),
-      };
-
-      setRecentRequests((prev) => [localRequest, ...prev].slice(0, 5));
-      setMessage(`${requestTypeLabels[type]} has been sent to staff.`);
-      setWorkingType(null);
-      return;
-    }
-
-    const { error } = await supabase.from("requests").insert({
-      room_number: roomNumber,
-      request_type: type,
-      status: "pending",
+    createRequest({
+      roomNumber,
+      requestType: type,
+      notes: notes.trim() || null,
+      photoUrl,
     });
 
-    if (error) {
-      setError(error.message);
-      setWorkingType(null);
-      return;
-    }
-
-    void fetchGuestData();
     setMessage(`${requestTypeLabels[type]} has been sent to staff.`);
+    setNotes("");
+    setPhotoUrl(null);
+    setSelectedType(null);
     setWorkingType(null);
   }
 
-  const statusTheme = roomStatus ? roomStatusStyles[roomStatus] : null;
+  if (!hydrated) {
+    return (
+      <div className="hotel-page flex min-h-screen items-center justify-center">
+        <p className="text-sm text-muted">Loading concierge…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="hotel-page">
       <main
         id="main-content"
-        className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-5 px-4 py-6 pb-36"
+        className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-5 px-4 py-6 pb-40"
       >
         <header className="hotel-hero px-5 py-7">
           <div className="relative z-10">
@@ -167,7 +124,9 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
               Room {roomNumber}
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-slate-300">
-              Tap a service below and your request will be delivered to our team instantly.
+              {reservation
+                ? `Welcome, ${reservation.guest_name}. Request services or view your bill.`
+                : "Tap a service below and your request will be delivered to our team."}
             </p>
             {statusTheme && (
               <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 backdrop-blur">
@@ -180,10 +139,58 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
           </div>
         </header>
 
-        {!hasSupabaseConfig && (
-          <p className="hotel-alert hotel-alert-warning">
-            Demo mode active. Configure Supabase keys for live staff delivery.
-          </p>
+        {folio && (
+          <button
+            type="button"
+            onClick={() => setShowBill((v) => !v)}
+            className="hotel-card hotel-card-accent flex w-full items-center justify-between p-4 text-left"
+          >
+            <div>
+              <p className="hotel-label text-gold">Your bill</p>
+              <p className="font-display text-2xl font-semibold text-navy">
+                {formatMoney(balance)} due
+              </p>
+            </div>
+            <span className="text-sm font-semibold text-gold">
+              {showBill ? "Hide" : "View"} →
+            </span>
+          </button>
+        )}
+
+        {showBill && folio && (
+          <article className="hotel-card p-5">
+            <h2 className="hotel-label">Folio charges</h2>
+            <ul className="mt-3 space-y-2">
+              {charges.map((charge) => (
+                <li
+                  key={charge.id}
+                  className="flex justify-between rounded-lg border border-border bg-cream px-3 py-2 text-sm"
+                >
+                  <span>{charge.description}</span>
+                  <span>{formatMoney(charge.amount)}</span>
+                </li>
+              ))}
+            </ul>
+            {payments.length > 0 && (
+              <>
+                <h2 className="hotel-label mt-4">Payments</h2>
+                <ul className="mt-2 space-y-2">
+                  {payments.map((payment) => (
+                    <li
+                      key={payment.id}
+                      className="flex justify-between rounded-lg border border-border bg-cream px-3 py-2 text-sm"
+                    >
+                      <span>{payment.method}</span>
+                      <span>−{formatMoney(payment.amount)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            <p className="mt-4 font-display text-xl font-semibold text-navy">
+              Balance {formatMoney(balance)}
+            </p>
+          </article>
         )}
 
         <section className="sticky bottom-3 z-20 hotel-card hotel-card-accent p-4 shadow-xl">
@@ -191,29 +198,78 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
             <ConciergeIcon className="h-4 w-4 text-gold" />
             <h2 className="hotel-label">Concierge Services</h2>
           </div>
-          <div className="mt-3 space-y-2">
-            {requestButtons.map((button) => (
-              <button
-                key={button.type}
-                type="button"
-                disabled={workingType === button.type}
-                onClick={() => {
-                  void submitRequest(button.type);
-                }}
-                className="staff-mode-action flex items-center gap-3 text-left staff-mode-action-secondary disabled:opacity-60"
-              >
-                <span className="text-lg" aria-hidden="true">
-                  {button.emoji}
-                </span>
-                {button.label}
-              </button>
-            ))}
-          </div>
+
+          {selectedType ? (
+            <div className="mt-3 space-y-3">
+              <p className="text-sm font-medium text-navy">
+                {requestTypeLabels[selectedType]}
+              </p>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Add a note (optional)"
+                rows={2}
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-navy"
+              />
+              <label className="block text-sm text-muted">
+                Attach photo (optional)
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="mt-1 block w-full text-sm"
+                  onChange={(e) => handlePhotoChange(e.target.files?.[0] ?? null)}
+                />
+              </label>
+              {photoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={photoUrl}
+                  alt="Preview"
+                  className="max-h-32 rounded-lg border border-border object-cover"
+                />
+              )}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className="hotel-btn hotel-btn-secondary flex-1"
+                  onClick={() => {
+                    setSelectedType(null);
+                    setPhotoUrl(null);
+                  }}
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  disabled={workingType === selectedType}
+                  className="hotel-btn hotel-btn-gold flex-1 disabled:opacity-60"
+                  onClick={() => submitRequest(selectedType)}
+                >
+                  Send request
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-3 space-y-2">
+              {requestButtons.map((button) => (
+                <button
+                  key={button.type}
+                  type="button"
+                  onClick={() => setSelectedType(button.type)}
+                  className="staff-mode-action flex items-center gap-3 text-left staff-mode-action-secondary"
+                >
+                  <span className="text-lg" aria-hidden="true">
+                    {button.emoji}
+                  </span>
+                  {button.label}
+                </button>
+              ))}
+            </div>
+          )}
         </section>
 
         {message && <p className="hotel-alert hotel-alert-success">{message}</p>}
-
-        {error && <p className="hotel-alert hotel-alert-error">{error}</p>}
 
         <article className="hotel-card p-5">
           <h2 className="hotel-label">Recent Requests</h2>

@@ -42,9 +42,24 @@ export const requestTypeLabels: Record<RequestType, string> = {
   late_checkout: "Late Checkout",
   food: "Food Order",
   hotel_services: "View Hotel Services",
+  digital_checkout: "Digital Checkout",
 };
 
 export const requestStatusStyles: Record<RequestStatus, string> = {
-  pending: "bg-amber-100/80 text-amber-900 border border-amber-300/60 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-700/50",
-  completed: "bg-emerald-100/80 text-emerald-900 border border-emerald-300/60 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-700/50",
+  pending:
+    "bg-amber-100/80 text-amber-900 border border-amber-300/60 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-700/50",
+  completed:
+    "bg-emerald-100/80 text-emerald-900 border border-emerald-300/60 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-700/50",
 };
+
+export const reservationSourceLabels = {
+  walk_in: "Walk-in",
+  ota: "OTA / Online",
+  phone: "Phone",
+} as const;
+
+export const staffRoleLabels = {
+  frontdesk: "Front Desk",
+  housekeeping: "Housekeeping",
+  manager: "Manager",
+} as const;

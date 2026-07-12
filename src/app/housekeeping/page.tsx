@@ -1,13 +1,5 @@
-import { OperationsPageLayout } from "@/components/OperationsPageLayout";
-import { RoomOperationsBoard } from "@/components/RoomOperationsBoard";
+import { redirect } from "next/navigation";
 
 export default function HousekeepingPage() {
-  return (
-    <OperationsPageLayout
-      title="Housekeeping Console"
-      subtitle="Move rooms through cleaning and report issues in real time."
-    >
-      <RoomOperationsBoard mode="housekeeping" />
-    </OperationsPageLayout>
-  );
+  redirect("/ops?filter=housekeeping");
 }

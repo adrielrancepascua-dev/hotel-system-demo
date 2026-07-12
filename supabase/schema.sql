@@ -1,5 +1,5 @@
--- Hotel operations demo schema for Supabase
--- Run this in the Supabase SQL editor.
+-- Harborlight Hotel Operations — full schema
+-- Run in the Supabase SQL editor (demo policies — not for production).
 
 do $$
 begin
@@ -15,11 +15,65 @@ begin
 end
 $$;
 
+create table if not exists public.room_types (
+  id bigint generated always as identity primary key,
+  name text not null unique,
+  capacity int not null default 2,
+  base_rate numeric(10,2) not null default 0
+);
+
 create table if not exists public.rooms (
   id bigint generated always as identity primary key,
   room_number text not null unique,
   status room_status not null default 'ready',
-  last_updated timestamptz not null default now()
+  last_updated timestamptz not null default now(),
+  room_type_id bigint references public.room_types(id),
+  floor int not null default 1
+);
+
+create table if not exists public.staff_members (
+  id bigint generated always as identity primary key,
+  name text not null,
+  role text not null check (role in ('frontdesk', 'housekeeping', 'manager'))
+);
+
+create table if not exists public.reservations (
+  id bigint generated always as identity primary key,
+  room_id bigint not null references public.rooms(id),
+  guest_name text not null,
+  email text not null default '',
+  phone text not null default '',
+  check_in_date date not null,
+  check_out_date date not null,
+  source text not null check (source in ('walk_in', 'ota', 'phone')),
+  status text not null check (status in ('booked', 'checked_in', 'checked_out', 'cancelled')),
+  nightly_rate numeric(10,2) not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.folios (
+  id bigint generated always as identity primary key,
+  reservation_id bigint not null references public.reservations(id),
+  status text not null default 'open' check (status in ('open', 'closed')),
+  created_at timestamptz not null default now(),
+  closed_at timestamptz
+);
+
+create table if not exists public.folio_charges (
+  id bigint generated always as identity primary key,
+  folio_id bigint not null references public.folios(id),
+  description text not null,
+  amount numeric(10,2) not null,
+  category text not null check (category in ('room', 'fnb', 'service', 'other')),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.payments (
+  id bigint generated always as identity primary key,
+  folio_id bigint not null references public.folios(id),
+  amount numeric(10,2) not null,
+  method text not null check (method in ('cash', 'card', 'transfer')),
+  paid_at timestamptz not null default now()
 );
 
 create table if not exists public.requests (
@@ -30,58 +84,71 @@ create table if not exists public.requests (
     'housekeeping',
     'late_checkout',
     'food',
-    'hotel_services'
+    'hotel_services',
+    'digital_checkout'
   )),
   status text not null default 'pending' check (status in ('pending', 'completed')),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  notes text,
+  photo_url text,
+  completed_by_staff_id bigint references public.staff_members(id),
+  completed_at timestamptz
 );
 
-alter table public.rooms enable row level security;
-alter table public.requests enable row level security;
+create table if not exists public.room_status_events (
+  id bigint generated always as identity primary key,
+  room_id bigint not null references public.rooms(id),
+  from_status room_status not null,
+  to_status room_status not null,
+  staff_id bigint references public.staff_members(id),
+  at timestamptz not null default now()
+);
 
--- Open demo policies (not for production).
-drop policy if exists "rooms_select_all" on public.rooms;
-create policy "rooms_select_all"
-  on public.rooms
-  for select
-  to anon, authenticated
-  using (true);
+-- Open demo RLS
+do $$
+declare
+  t text;
+begin
+  foreach t in array array[
+    'room_types','rooms','staff_members','reservations','folios',
+    'folio_charges','payments','requests','room_status_events'
+  ]
+  loop
+    execute format('alter table public.%I enable row level security', t);
+    execute format('drop policy if exists "%s_all" on public.%I', t, t);
+    execute format(
+      'create policy "%s_all" on public.%I for all to anon, authenticated using (true) with check (true)',
+      t, t
+    );
+  end loop;
+end
+$$;
 
-drop policy if exists "rooms_update_all" on public.rooms;
-create policy "rooms_update_all"
-  on public.rooms
-  for update
-  to anon, authenticated
-  using (true)
-  with check (true);
+insert into public.room_types (name, capacity, base_rate)
+values
+  ('Standard', 2, 89),
+  ('Deluxe', 3, 129),
+  ('Suite', 4, 189)
+on conflict (name) do update
+set capacity = excluded.capacity, base_rate = excluded.base_rate;
 
-drop policy if exists "requests_select_all" on public.requests;
-create policy "requests_select_all"
-  on public.requests
-  for select
-  to anon, authenticated
-  using (true);
+insert into public.staff_members (name, role)
+select * from (values
+  ('Maya Chen', 'frontdesk'),
+  ('Jordan Blake', 'frontdesk'),
+  ('Sofia Rivera', 'housekeeping'),
+  ('Sam Okonkwo', 'housekeeping'),
+  ('Alex Morgan', 'manager')
+) as v(name, role)
+where not exists (select 1 from public.staff_members limit 1);
 
-drop policy if exists "requests_insert_all" on public.requests;
-create policy "requests_insert_all"
-  on public.requests
-  for insert
-  to anon, authenticated
-  with check (true);
-
-drop policy if exists "requests_update_all" on public.requests;
-create policy "requests_update_all"
-  on public.requests
-  for update
-  to anon, authenticated
-  using (true)
-  with check (true);
-
-insert into public.rooms (room_number, status, last_updated)
+insert into public.rooms (room_number, status, last_updated, room_type_id, floor)
 select
   room_num::text,
   (array['ready', 'occupied', 'needs_cleaning', 'cleaning', 'maintenance'])[((row_num - 1) % 5) + 1]::room_status,
-  now() - make_interval(mins => row_num * 8)
+  now() - make_interval(mins => row_num * 8),
+  ((row_num - 1) % 3) + 1,
+  (room_num / 100)::int
 from (
   select room_num, row_number() over (order by room_num) as row_num
   from generate_series(101, 120) as room_num
@@ -89,28 +156,28 @@ from (
 on conflict (room_number) do update
 set
   status = excluded.status,
-  last_updated = excluded.last_updated;
+  last_updated = excluded.last_updated,
+  room_type_id = excluded.room_type_id,
+  floor = excluded.floor;
 
-insert into public.requests (room_number, request_type, status, created_at)
+insert into public.requests (room_number, request_type, status, created_at, notes)
 values
-  ('104', 'towels', 'pending', now() - interval '7 minutes'),
-  ('118', 'late_checkout', 'pending', now() - interval '15 minutes'),
-  ('115', 'housekeeping', 'pending', now() - interval '22 minutes')
+  ('104', 'towels', 'pending', now() - interval '7 minutes', 'Extra bath towels'),
+  ('118', 'late_checkout', 'pending', now() - interval '15 minutes', 'Requesting 2pm checkout'),
+  ('115', 'housekeeping', 'pending', now() - interval '22 minutes', null)
 on conflict do nothing;
 
 do $$
 begin
   if not exists (
-    select 1
-    from pg_publication_tables
+    select 1 from pg_publication_tables
     where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'rooms'
   ) then
     alter publication supabase_realtime add table public.rooms;
   end if;
 
   if not exists (
-    select 1
-    from pg_publication_tables
+    select 1 from pg_publication_tables
     where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'requests'
   ) then
     alter publication supabase_realtime add table public.requests;

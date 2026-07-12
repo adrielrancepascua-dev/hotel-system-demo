@@ -6,12 +6,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { HotelIcon } from "@/components/icons";
+import { StaffShiftPicker } from "@/components/StaffShiftPicker";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const links = [
-  { href: "/dashboard", label: "Manager" },
-  { href: "/frontdesk", label: "Front Desk" },
-  { href: "/housekeeping", label: "Housekeeping" },
+  { href: "/ops", label: "Ops" },
+  { href: "/reservations", label: "Reservations" },
+  { href: "/billing", label: "Billing" },
+  { href: "/reports", label: "Reports" },
   { href: "/requests", label: "Requests" },
   { href: "/room/108", label: "Guest QR" },
 ];
@@ -55,7 +57,7 @@ export function AppHeader() {
           <span className="text-sm">{isMenuOpen ? "Close" : "Menu"}</span>
         </button>
 
-        <nav aria-label="Primary" className="hidden items-center gap-1.5 md:flex">
+        <nav aria-label="Primary" className="hidden items-center gap-1.5 lg:flex">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -65,6 +67,7 @@ export function AppHeader() {
               {link.label}
             </Link>
           ))}
+          <StaffShiftPicker />
           <ThemeToggle />
         </nav>
       </div>
@@ -72,7 +75,7 @@ export function AppHeader() {
       <nav
         id="mobile-app-nav"
         aria-label="Mobile primary"
-        className={`${isMenuOpen ? "block" : "hidden"} border-t border-border px-4 py-3 md:hidden`}
+        className={`${isMenuOpen ? "block" : "hidden"} border-t border-border px-4 py-3 lg:hidden`}
       >
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-2">
           {links.map((link) => (
@@ -86,6 +89,7 @@ export function AppHeader() {
               {link.label}
             </Link>
           ))}
+          <StaffShiftPicker className="w-full justify-between rounded-lg border border-border px-3 py-2" />
           <ThemeToggle className="w-full justify-center" />
         </div>
       </nav>

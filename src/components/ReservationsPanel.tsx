@@ -52,15 +52,15 @@ export function ReservationsPanel() {
   }
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
+    <section className="mx-auto w-full max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
+      <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
           {statusFilters.map((item) => (
             <button
               key={item.key}
               type="button"
               onClick={() => setFilter(item.key)}
-              className={`hotel-btn ${filter === item.key ? "hotel-btn-gold" : "hotel-btn-secondary"}`}
+              className={`hotel-btn shrink-0 ${filter === item.key ? "hotel-btn-gold" : "hotel-btn-secondary"}`}
             >
               {item.label}
             </button>

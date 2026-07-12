@@ -47,18 +47,18 @@ export function ReportsPanel() {
   ];
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <section className="mx-auto w-full max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
         {cards.map((card) => (
-          <article key={card.label} className="hotel-stat hotel-card-accent">
+          <article key={card.label} className="hotel-stat hotel-card-accent min-w-0">
             <p className="hotel-label">{card.label}</p>
-            <p className="hotel-stat-value mt-2">{card.value}</p>
-            <p className="mt-1 text-xs text-muted">{card.hint}</p>
+            <p className="hotel-stat-value mt-1 sm:mt-2">{card.value}</p>
+            <p className="mt-1 text-[0.6875rem] text-muted sm:text-xs">{card.hint}</p>
           </article>
         ))}
       </div>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
+      <div className="mt-4 grid gap-4 sm:mt-6 sm:gap-5 lg:grid-cols-2">
         <article className="hotel-card p-5">
           <p className="hotel-label">By room type</p>
           <ul className="mt-4 space-y-3">

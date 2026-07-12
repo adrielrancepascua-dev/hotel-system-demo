@@ -69,19 +69,19 @@ export default function Home() {
   return (
     <div className="hotel-page">
       <AppHeader />
-      <main id="main-content" className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-        <section className="hotel-hero px-6 py-10 sm:px-10 sm:py-14">
+      <main id="main-content" className="mx-auto w-full max-w-6xl px-3 py-6 sm:px-6 sm:py-12">
+        <section className="hotel-hero px-5 py-8 sm:px-10 sm:py-14">
           <div className="relative z-10 max-w-2xl">
             <p className="hotel-label text-gold-light">Boutique Hotel Operations</p>
-            <h2 className="font-display mt-3 text-4xl font-semibold leading-tight text-white sm:text-5xl">
+            <h2 className="font-display mt-2 text-3xl font-semibold leading-tight text-white sm:mt-3 sm:text-4xl md:text-5xl">
               From reservation to receipt,
               <span className="block text-gold-light">in one elegant suite.</span>
             </h2>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
+            <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-300 sm:mt-5 sm:text-base md:text-lg">
               Demo Hotel connects front desk, housekeeping, billing, and guest concierge —
               so your team acts on rooms by status, not by switching role tabs.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-wrap gap-2 sm:mt-8 sm:gap-3">
               <Link href="/ops" className="hotel-btn hotel-btn-gold">
                 <DashboardIcon className="h-4 w-4" />
                 Open Operations
@@ -96,15 +96,15 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="mt-10">
-          <div className="mb-6">
+        <section className="mt-8 sm:mt-10">
+          <div className="mb-4 sm:mb-6">
             <p className="hotel-label">Workspaces</p>
-            <h3 className="font-display mt-1 text-2xl font-semibold text-navy">
+            <h3 className="font-display mt-1 text-xl font-semibold text-navy sm:text-2xl">
               Everything your property needs
             </h3>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             {portals.map((portal) => (
               <Link key={portal.href} href={portal.href} className="group">
                 <article

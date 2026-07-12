@@ -50,22 +50,22 @@ export function BillingPanel() {
   }
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
-      <div className="mb-5 flex flex-wrap gap-2">
+    <section className="mx-auto w-full max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1 sm:mb-5 sm:flex-wrap sm:overflow-visible sm:pb-0">
         {(["open", "closed", "all"] as const).map((key) => (
           <button
             key={key}
             type="button"
             onClick={() => setStatusFilter(key)}
-            className={`hotel-btn ${statusFilter === key ? "hotel-btn-gold" : "hotel-btn-secondary"}`}
+            className={`hotel-btn shrink-0 ${statusFilter === key ? "hotel-btn-gold" : "hotel-btn-secondary"}`}
           >
             {key === "all" ? "All folios" : key === "open" ? "Open" : "Closed"}
           </button>
         ))}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <div className="space-y-2">
+      <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)]">
+        <div className="flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-2 lg:overflow-visible lg:pb-0">
           {folios.length === 0 ? (
             <p className="text-sm text-muted">No folios in this filter.</p>
           ) : (
@@ -78,13 +78,13 @@ export function BillingPanel() {
                   key={folio.id}
                   type="button"
                   onClick={() => setSelectedFolioId(folio.id)}
-                  className={`w-full rounded-xl border p-3 text-left transition ${
+                  className={`min-w-[11rem] shrink-0 rounded-xl border p-3 text-left transition lg:min-w-0 lg:w-full ${
                     active
                       ? "border-gold bg-gold-muted/40"
                       : "border-border bg-surface-elevated hover:border-gold/50"
                   }`}
                 >
-                  <p className="font-medium text-navy">{res?.guest_name ?? "Guest"}</p>
+                  <p className="truncate font-medium text-navy">{res?.guest_name ?? "Guest"}</p>
                   <p className="text-xs text-muted">
                     Folio #{folio.id} · {folio.status} · {formatMoney(bal)} due
                   </p>

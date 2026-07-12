@@ -112,46 +112,75 @@ html[data-theme="dark"] body {
   }
 
   .hotel-stat {
-    border-radius: 0.875rem;
+    border-radius: 0.75rem;
     border: 1px solid var(--border);
     background-color: var(--surface-elevated);
-    padding: 1rem 1.25rem;
+    padding: 0.625rem 0.75rem;
     box-shadow: 0 1px 3px rgba(var(--shadow-color), 0.05);
+  }
+
+  @media (min-width: 640px) {
+    .hotel-stat {
+      border-radius: 0.875rem;
+      padding: 1rem 1.25rem;
+    }
   }
 
   .hotel-stat-value {
     font-family: var(--font-cormorant), Georgia, serif;
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 600;
     line-height: 1.1;
     color: var(--navy);
   }
 
+  @media (min-width: 640px) {
+    .hotel-stat-value {
+      font-size: 2rem;
+    }
+  }
+
   .hotel-label {
-    font-size: 0.6875rem;
+    font-size: 0.625rem;
     font-weight: 600;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--muted);
   }
 
+  @media (min-width: 640px) {
+    .hotel-label {
+      font-size: 0.6875rem;
+      letter-spacing: 0.14em;
+    }
+  }
+
   .hotel-btn {
     display: inline-flex;
-    min-height: 2.75rem;
+    min-height: 2.5rem;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     border-radius: 0.625rem;
-    padding: 0.625rem 1.25rem;
-    font-size: 0.875rem;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8125rem;
     font-weight: 600;
     line-height: 1.25;
+    white-space: nowrap;
     transition:
       background-color 180ms ease,
       color 180ms ease,
       border-color 180ms ease,
       box-shadow 180ms ease,
       transform 180ms ease;
+  }
+
+  @media (min-width: 640px) {
+    .hotel-btn {
+      min-height: 2.75rem;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.875rem;
+    }
   }
 
   .hotel-btn:active {
@@ -372,8 +401,14 @@ html[data-theme="dark"] body {
     border-radius: 1rem;
     border: 1px solid var(--border);
     background-color: var(--surface-elevated);
-    padding: 1.5rem;
+    padding: 1rem;
     transition: all 220ms ease;
+  }
+
+  @media (min-width: 640px) {
+    .hotel-feature-card {
+      padding: 1.5rem;
+    }
   }
 
   .hotel-feature-card:hover {

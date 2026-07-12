@@ -204,102 +204,74 @@ export function UnifiedOpsBoard({ initialFilter = "all" }: UnifiedOpsBoardProps)
 
   if (!hydrated) {
     return (
-      <section className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
+      <section className="mx-auto w-full max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
         <p className="text-sm text-muted">Loading operations board…</p>
       </section>
     );
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-6 sm:px-6">
-      <div className="hotel-alert hotel-alert-info">Demo mode</div>
+    <section className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-4 sm:gap-5 sm:px-6 sm:py-6">
+      <div className="hotel-alert hotel-alert-info py-2 text-xs sm:py-3 sm:text-sm">
+        Demo mode
+      </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
         {(
           [
-            ["all", "All rooms"],
-            ["frontdesk", "Front desk queue"],
-            ["housekeeping", "Housekeeping queue"],
+            ["all", "All", "All rooms"],
+            ["frontdesk", "Front desk", "Front desk queue"],
+            ["housekeeping", "Housekeeping", "Housekeeping queue"],
           ] as const
-        ).map(([key, label]) => (
+        ).map(([key, shortLabel, label]) => (
           <button
             key={key}
             type="button"
             onClick={() => setFilter(key)}
-            className={`hotel-btn ${filter === key ? "hotel-btn-gold" : "hotel-btn-secondary"}`}
+            className={`hotel-btn shrink-0 ${filter === key ? "hotel-btn-gold" : "hotel-btn-secondary"}`}
           >
-            {label}
+            <span className="sm:hidden">{shortLabel}</span>
+            <span className="hidden sm:inline">{label}</span>
           </button>
         ))}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
         {summaryLabels.map((item) => {
           const theme = roomStatusStyles[item.key];
+          const shortLabel =
+            item.key === "needs_cleaning"
+              ? "Needs clean"
+              : item.key === "maintenance"
+                ? "Maint."
+                : item.label;
           return (
-            <article key={item.key} className="hotel-stat">
-              <div className="flex items-center gap-2">
-                <span className={`h-2 w-2 rounded-full ${theme.dot}`} aria-hidden />
-                <p className="hotel-label">{item.label}</p>
+            <article key={item.key} className="hotel-stat min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className={`h-2 w-2 shrink-0 rounded-full ${theme.dot}`} aria-hidden />
+                <p className="hotel-label truncate">
+                  <span className="sm:hidden">{shortLabel}</span>
+                  <span className="hidden sm:inline">{item.label}</span>
+                </p>
               </div>
-              <p className="hotel-stat-value mt-2">{stats[item.key]}</p>
+              <p className="hotel-stat-value mt-1 sm:mt-2">{stats[item.key]}</p>
             </article>
           );
         })}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-          {rooms.map((room) => {
-            const theme = roomStatusStyles[room.status];
-            const type = getRoomType(room, state.roomTypes);
-            const reservation = getActiveReservation(room.id, state.reservations);
-            const isSelected = room.id === selectedRoomId;
-
-            return (
-              <button
-                key={room.id}
-                type="button"
-                onClick={() => setSelectedRoomId(room.id)}
-                aria-pressed={isSelected}
-                aria-label={`Room ${room.room_number}, ${theme.label}${type ? `, ${type.name}` : ""}`}
-                className={`staff-mode-card group min-h-36 w-full rounded-xl border p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${theme.card} ${
-                  isSelected ? "ring-2 ring-gold/60 shadow-md" : ""
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <p className="hotel-label text-muted">
-                    Fl. {room.floor} · {type?.name ?? "Room"}
-                  </p>
-                  <span className={`h-2.5 w-2.5 rounded-full ${theme.dot}`} aria-hidden />
-                </div>
-                <p className="font-display mt-1 text-3xl font-semibold text-navy">
-                  {room.room_number}
-                </p>
-                <span
-                  className={`staff-mode-badge mt-3 inline-flex rounded-full px-2.5 py-1 ${theme.badge}`}
-                >
-                  {theme.label}
-                </span>
-                <p className="mt-3 truncate text-xs text-muted">
-                  {reservation?.guest_name ??
-                    (room.status === "ready"
-                      ? `From ${formatMoney(type?.base_rate ?? 0)}/night`
-                      : "No guest")}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px]">
+        {/* Actions first on mobile when a room is selected */}
         <aside
           ref={actionsPanelRef}
-          className="hotel-card hotel-card-accent h-fit p-5 lg:sticky lg:top-24"
+          className={`hotel-card hotel-card-accent h-fit order-1 p-4 sm:p-5 lg:sticky lg:top-20 lg:order-2 ${
+            selectedRoom ? "block" : "hidden lg:block"
+          }`}
         >
           {selectedRoom ? (
             <>
               <p className="hotel-label text-gold">Selected Room</p>
-              <h2 className="font-display mt-1 text-2xl font-semibold text-navy">
+              <h2 className="font-display mt-1 text-xl font-semibold text-navy sm:text-2xl">
                 Room {selectedRoom.room_number}
               </h2>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted">
@@ -325,7 +297,7 @@ export function UnifiedOpsBoard({ initialFilter = "all" }: UnifiedOpsBoardProps)
                   </p>
                 </div>
               )}
-              <div className="hotel-divider my-4" />
+              <div className="hotel-divider my-3 sm:my-4" />
               <div className="space-y-2">{statusActions(selectedRoom.status)}</div>
 
               {checkoutPrompt && (
@@ -377,15 +349,58 @@ export function UnifiedOpsBoard({ initialFilter = "all" }: UnifiedOpsBoardProps)
             <div className="py-6 text-center">
               <p className="font-display text-lg text-navy">No room selected</p>
               <p className="mt-2 text-sm text-muted">
-                Tap a room card. Actions adapt to its status — no role tab switching.
+                Tap a room card. Actions adapt to its status.
               </p>
             </div>
           )}
         </aside>
+
+        <div className="order-2 grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:order-1 xl:grid-cols-4">
+          {rooms.map((room) => {
+            const theme = roomStatusStyles[room.status];
+            const type = getRoomType(room, state.roomTypes);
+            const reservation = getActiveReservation(room.id, state.reservations);
+            const isSelected = room.id === selectedRoomId;
+
+            return (
+              <button
+                key={room.id}
+                type="button"
+                onClick={() => setSelectedRoomId(room.id)}
+                aria-pressed={isSelected}
+                aria-label={`Room ${room.room_number}, ${theme.label}${type ? `, ${type.name}` : ""}`}
+                className={`staff-mode-card group min-h-28 w-full rounded-xl border p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 sm:min-h-32 sm:p-4 ${theme.card} ${
+                  isSelected ? "ring-2 ring-gold/60 shadow-md" : ""
+                }`}
+              >
+                <div className="flex items-start justify-between gap-1">
+                  <p className="hotel-label truncate text-muted">
+                    Fl. {room.floor} · {type?.name ?? "Room"}
+                  </p>
+                  <span className={`mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full ${theme.dot}`} aria-hidden />
+                </div>
+                <p className="font-display mt-0.5 text-2xl font-semibold text-navy sm:mt-1 sm:text-3xl">
+                  {room.room_number}
+                </p>
+                <span
+                  className={`staff-mode-badge mt-2 inline-flex rounded-full px-2 py-0.5 text-[0.625rem] sm:mt-3 sm:px-2.5 sm:py-1 sm:text-xs ${theme.badge}`}
+                >
+                  {theme.label}
+                </span>
+                <p className="mt-2 truncate text-[0.6875rem] text-muted sm:mt-3 sm:text-xs">
+                  {reservation?.guest_name ??
+                    (room.status === "ready"
+                      ? `From ${formatMoney(type?.base_rate ?? 0)}/night`
+                      : "No guest")}
+                </p>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {recentEvents.length > 0 && (
-        <div className="hotel-card p-5">
+        <div className="hotel-card p-4 sm:p-5">
           <p className="hotel-label">Recent activity</p>
           <ul className="mt-3 space-y-2">
             {recentEvents.map((event) => {

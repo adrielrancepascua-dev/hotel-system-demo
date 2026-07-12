@@ -21,14 +21,14 @@ export function OperationsPageLayout({
     <div className="hotel-page">
       <AppHeader />
       <main id="main-content">
-        <section className={`mx-auto w-full px-4 pt-8 sm:px-6 ${maxWidthClass}`}>
+        <section className={`mx-auto w-full px-3 pt-4 sm:px-6 sm:pt-6 md:pt-8 ${maxWidthClass}`}>
           <div className="mb-1">
             <p className="hotel-label text-gold">Staff Console</p>
-            <h2 className="font-display mt-1 text-3xl font-semibold text-navy sm:text-4xl">
+            <h2 className="font-display mt-0.5 text-2xl font-semibold text-navy sm:mt-1 sm:text-3xl md:text-4xl">
               {title}
             </h2>
-            <div className="hotel-divider mt-4 max-w-xs" />
-            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
+            <div className="hotel-divider mt-2 max-w-[8rem] sm:mt-4 sm:max-w-xs" />
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted sm:mt-3 sm:text-base">
               {subtitle}
             </p>
           </div>

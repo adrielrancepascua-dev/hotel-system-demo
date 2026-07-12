@@ -30,9 +30,9 @@ export function RequestFeedPanel() {
   }
 
   return (
-    <section className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
+    <section className="mx-auto w-full max-w-5xl px-3 py-4 sm:px-6 sm:py-6">
       {requests.length > 0 && (
-        <div className="mb-5 flex items-center gap-4">
+        <div className="mb-4 flex items-stretch gap-2 sm:mb-5 sm:gap-4">
           <div className="hotel-stat flex-1">
             <p className="hotel-label">Total Requests</p>
             <p className="hotel-stat-value mt-1">{requests.length}</p>

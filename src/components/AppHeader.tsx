@@ -39,7 +39,7 @@ export function AppHeader() {
             <HotelIcon className="h-5 w-5" />
           </div>
           <div>
-            <p className="hotel-label text-gold">Harborlight Hotel</p>
+            <p className="hotel-label text-gold">Demo Hotel</p>
             <h1 className="font-display text-lg font-semibold leading-tight text-navy sm:text-xl">
               Operations Suite
             </h1>

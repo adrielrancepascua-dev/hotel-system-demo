@@ -1,4 +1,4 @@
-# Harborlight Hotel Operations Suite
+# Demo Hotel Operations Suite
 
 Demo hotel management system built with Next.js App Router, TypeScript, TailwindCSS, and optional Supabase.
 

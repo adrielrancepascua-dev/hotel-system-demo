@@ -78,7 +78,7 @@ export default function Home() {
               <span className="block text-gold-light">in one elegant suite.</span>
             </h2>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
-              Harborlight connects front desk, housekeeping, billing, and guest concierge —
+              Demo Hotel connects front desk, housekeeping, billing, and guest concierge —
               so your team acts on rooms by status, not by switching role tabs.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">

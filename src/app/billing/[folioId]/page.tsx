@@ -47,7 +47,7 @@ export default function FolioReceiptPage({
           <article className="hotel-card hotel-card-accent print:shadow-none p-6 sm:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="hotel-label text-gold">Harborlight Hotel</p>
+                <p className="hotel-label text-gold">Demo Hotel</p>
                 <h1 className="font-display mt-1 text-3xl font-semibold text-navy">
                   Guest Receipt
                 </h1>
@@ -128,7 +128,7 @@ export default function FolioReceiptPage({
             </div>
 
             <p className="mt-8 text-center text-xs text-muted">
-              Thank you for staying with Harborlight Hotel.
+              Thank you for staying with Demo Hotel.
             </p>
 
             <div className="mt-6 flex justify-center print:hidden">

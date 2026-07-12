@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 
 import { CheckInModal } from "@/components/CheckInModal";
-import { roomStatusStyles, staffRoleLabels } from "@/lib/constants";
+import { roomStatusStyles } from "@/lib/constants";
 import { formatMoney } from "@/lib/demo";
 import {
   folioBalance,
@@ -85,7 +85,6 @@ export function UnifiedOpsBoard({ initialFilter = "all" }: UnifiedOpsBoardProps)
   }, [state.rooms]);
 
   const recentEvents = state.statusEvents.slice(0, 5);
-  const activeStaff = state.staff.find((s) => s.id === state.activeStaffId);
 
   function handleCheckout(closeFolio: boolean) {
     if (!selectedRoom) return;
@@ -213,14 +212,7 @@ export function UnifiedOpsBoard({ initialFilter = "all" }: UnifiedOpsBoardProps)
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-6 sm:px-6">
-      <div className="hotel-alert hotel-alert-info">
-        Demo mode with local persistence. All role actions live on this one board — pick a room,
-        act by status. On shift:{" "}
-        <strong>
-          {activeStaff?.name ?? "—"} ·{" "}
-          {activeStaff ? staffRoleLabels[activeStaff.role] : ""}
-        </strong>
-      </div>
+      <div className="hotel-alert hotel-alert-info">Demo mode</div>
 
       <div className="flex flex-wrap gap-2">
         {(

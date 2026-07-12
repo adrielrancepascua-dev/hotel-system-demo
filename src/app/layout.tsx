@@ -21,7 +21,7 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "Harborlight Hotel | Operations Suite",
+  title: "Demo Hotel | Operations Suite",
   description:
     "Elegant hotel operations platform with real-time room management, guest concierge, and staff coordination.",
 };

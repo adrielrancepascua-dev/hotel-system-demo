@@ -16,7 +16,7 @@ export default async function OpsPage({
   return (
     <OperationsPageLayout
       title="Operations Console"
-      subtitle="One board for every room action — check-in, checkout, cleaning, and maintenance. Status drives the next step; staff on shift gets the credit."
+      subtitle="One board for every room action."
     >
       <UnifiedOpsBoard initialFilter={filter} />
     </OperationsPageLayout>

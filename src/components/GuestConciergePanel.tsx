@@ -116,7 +116,7 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
                 <HotelIcon className="h-5 w-5" />
               </div>
               <div>
-                <p className="hotel-label text-gold-light">Harborlight Hotel</p>
+                <p className="hotel-label text-gold-light">Demo Hotel</p>
                 <p className="text-sm text-slate-300">Room Concierge</p>
               </div>
             </div>

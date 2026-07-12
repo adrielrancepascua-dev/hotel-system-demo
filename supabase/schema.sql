@@ -1,4 +1,4 @@
--- Harborlight Hotel Operations — full schema
+-- Demo Hotel Operations — full schema
 -- Run in the Supabase SQL editor (demo policies — not for production).
 
 do $$

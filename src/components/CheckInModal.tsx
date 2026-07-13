@@ -130,7 +130,7 @@ export function CheckInModal({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-navy"
-                placeholder="guest@email.com"
+                placeholder="juan@email.com"
               />
             </div>
             <div>
@@ -143,7 +143,7 @@ export function CheckInModal({
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-navy"
-                placeholder="+1…"
+                placeholder="09XX XXX XXXX"
               />
             </div>
           </div>

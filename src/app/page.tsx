@@ -72,7 +72,7 @@ export default function Home() {
       <main id="main-content" className="mx-auto w-full max-w-6xl px-3 py-6 sm:px-6 sm:py-12">
         <section className="hotel-hero px-5 py-8 sm:px-10 sm:py-14">
           <div className="relative z-10 max-w-2xl">
-            <p className="hotel-label text-gold-light">Boutique Hotel Operations</p>
+            <p className="hotel-label text-gold-light">Philippine Hotel Operations</p>
             <h2 className="font-display mt-2 text-3xl font-semibold leading-tight text-white sm:mt-3 sm:text-4xl md:text-5xl">
               From reservation to receipt,
               <span className="block text-gold-light">in one elegant suite.</span>

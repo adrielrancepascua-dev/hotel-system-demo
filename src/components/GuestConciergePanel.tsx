@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { ConciergeIcon, HotelIcon } from "@/components/icons";
-import { requestTypeLabels, roomStatusStyles } from "@/lib/constants";
+import { paymentMethodLabels, requestTypeLabels, roomStatusStyles } from "@/lib/constants";
 import { formatMoney } from "@/lib/demo";
 import {
   folioBalance,
@@ -23,10 +23,10 @@ const requestButtons: Array<{ type: RequestType; label: string; emoji: string }>
 ];
 
 const hotelServices = [
-  { label: "Pool & Spa", hours: "6:00 AM – 10:00 PM" },
-  { label: "Airport Shuttle", hours: "On request" },
-  { label: "Breakfast Buffet", hours: "7:00 AM – 10:30 AM" },
-  { label: "Laundry Pickup", hours: "Before 9:00 PM" },
+  { label: "Swimming pool", hours: "6:00 AM – 10:00 PM" },
+  { label: "NAIA airport shuttle", hours: "On request" },
+  { label: "Breakfast buffet", hours: "6:30 AM – 10:00 AM" },
+  { label: "Laundry / dry clean", hours: "Pickup before 8:00 PM" },
 ];
 
 export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
@@ -180,7 +180,7 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
                       key={payment.id}
                       className="flex justify-between rounded-lg border border-border bg-cream px-3 py-2 text-sm"
                     >
-                      <span>{payment.method}</span>
+                      <span>{paymentMethodLabels[payment.method]}</span>
                       <span>−{formatMoney(payment.amount)}</span>
                     </li>
                   ))}

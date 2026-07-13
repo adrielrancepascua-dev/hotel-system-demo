@@ -54,8 +54,16 @@ export const requestStatusStyles: Record<RequestStatus, string> = {
 
 export const reservationSourceLabels = {
   walk_in: "Walk-in",
-  ota: "OTA / Online",
-  phone: "Phone",
+  ota: "Agoda / Booking",
+  phone: "Phone / Viber",
+} as const;
+
+export const paymentMethodLabels = {
+  cash: "Cash",
+  card: "Card",
+  gcash: "GCash",
+  maya: "Maya",
+  transfer: "Bank transfer",
 } as const;
 
 export const staffRoleLabels = {

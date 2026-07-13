@@ -1,16 +1,16 @@
 # Demo Hotel Operations Suite
 
-Demo hotel management system built with Next.js App Router, TypeScript, TailwindCSS, and optional Supabase.
+Philippine hotel management demo built with Next.js App Router, TypeScript, TailwindCSS, and optional Supabase. Amounts are in **PHP (₱)**.
 
 ## Features
 
 - **Unified Operations console** — check-in, checkout, cleaning, and maintenance on one board (status-driven actions, no role-tab hopping)
-- **Reservations** — guest name/contact, stay dates, source (walk-in / OTA / phone)
-- **Room types & rates** — Standard, Deluxe, Suite with capacity and nightly rates
-- **Billing / folios** — auto room-night charges, incidentals, payments, printable receipts
+- **Reservations** — guest name/contact, stay dates, source (walk-in / Agoda·Booking / phone)
+- **Room types & rates** — Standard ₱2,500 · Deluxe ₱3,800 · Suite ₱5,500 per night
+- **Billing / folios** — room charges, incidentals, GCash / Maya / card / cash payments, receipts
 - **Staff shift picker** — attributes who completed cleaning and guest requests
-- **Owner reports** — occupancy, ADR, RevPAR, revenue today/MTD, breakdowns by type & source
-- **Guest QR concierge** — bill view, digital checkout request, notes + photo attachments
+- **Owner reports** — occupancy, ADR, RevPAR, revenue today/MTD
+- **Guest QR concierge** — bill view, digital checkout, notes + photo attachments
 - Demo mode persists in `localStorage` (no Supabase required)
 
 ## Routes

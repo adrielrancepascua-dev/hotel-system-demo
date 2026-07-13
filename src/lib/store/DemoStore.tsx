@@ -23,7 +23,7 @@ import type {
   RoomStatus,
 } from "@/lib/types";
 
-const STORAGE_KEY = "harborlight-hotel-state-v1";
+const STORAGE_KEY = "demo-hotel-ph-state-v1";
 
 type DemoStoreValue = {
   state: HotelState;

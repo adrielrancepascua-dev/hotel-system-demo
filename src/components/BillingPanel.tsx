@@ -7,16 +7,17 @@ import { formatMoney } from "@/lib/demo";
 import { folioBalance } from "@/lib/metrics";
 import { useDemoStore } from "@/lib/store/DemoStore";
 import type { ChargeCategory, FolioStatus, PaymentMethod } from "@/lib/types";
+import { paymentMethodLabels } from "@/lib/constants";
 
 export function BillingPanel() {
   const { state, hydrated, addCharge, addPayment, closeFolio } = useDemoStore();
   const [statusFilter, setStatusFilter] = useState<FolioStatus | "all">("open");
   const [selectedFolioId, setSelectedFolioId] = useState<number | null>(null);
-  const [chargeDesc, setChargeDesc] = useState("Minibar");
-  const [chargeAmount, setChargeAmount] = useState(12);
+  const [chargeDesc, setChargeDesc] = useState("Minibar / snacks");
+  const [chargeAmount, setChargeAmount] = useState(250);
   const [chargeCategory, setChargeCategory] = useState<ChargeCategory>("fnb");
   const [payAmount, setPayAmount] = useState(0);
-  const [payMethod, setPayMethod] = useState<PaymentMethod>("card");
+  const [payMethod, setPayMethod] = useState<PaymentMethod>("gcash");
 
   const folios = useMemo(() => {
     const list =
@@ -142,7 +143,8 @@ export function BillingPanel() {
                     className="flex justify-between rounded-lg bg-cream px-3 py-2 text-sm"
                   >
                     <span className="text-navy">
-                      {payment.method} · {new Date(payment.paid_at).toLocaleString()}
+                      {paymentMethodLabels[payment.method]} ·{" "}
+                      {new Date(payment.paid_at).toLocaleString("en-PH")}
                     </span>
                     <span className="font-medium text-emerald-700 dark:text-emerald-300">
                       −{formatMoney(payment.amount)}
@@ -172,7 +174,7 @@ export function BillingPanel() {
                     <input
                       type="number"
                       min={0}
-                      step={0.01}
+                      step={1}
                       value={chargeAmount}
                       onChange={(e) => setChargeAmount(Number(e.target.value))}
                       className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
@@ -207,7 +209,7 @@ export function BillingPanel() {
                   <input
                     type="number"
                     min={0}
-                    step={0.01}
+                    step={1}
                     value={payAmount || ""}
                     placeholder={String(balance)}
                     onChange={(e) => setPayAmount(Number(e.target.value))}
@@ -218,9 +220,11 @@ export function BillingPanel() {
                     onChange={(e) => setPayMethod(e.target.value as PaymentMethod)}
                     className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                   >
+                    <option value="gcash">GCash</option>
+                    <option value="maya">Maya</option>
                     <option value="card">Card</option>
                     <option value="cash">Cash</option>
-                    <option value="transfer">Transfer</option>
+                    <option value="transfer">Bank transfer</option>
                   </select>
                   <button type="submit" className="hotel-btn hotel-btn-primary w-full">
                     Take payment

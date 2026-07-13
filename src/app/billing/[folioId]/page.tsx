@@ -4,6 +4,7 @@ import { use } from "react";
 import Link from "next/link";
 
 import { AppHeader } from "@/components/AppHeader";
+import { paymentMethodLabels } from "@/lib/constants";
 import { formatMoney } from "@/lib/demo";
 import { folioBalance } from "@/lib/metrics";
 import { useDemoStore } from "@/lib/store/DemoStore";
@@ -104,7 +105,8 @@ export default function FolioReceiptPage({
                 {payments.map((payment) => (
                   <li key={payment.id} className="flex justify-between py-2 text-sm">
                     <span>
-                      {payment.method} · {new Date(payment.paid_at).toLocaleDateString()}
+                      {paymentMethodLabels[payment.method]} ·{" "}
+                      {new Date(payment.paid_at).toLocaleDateString("en-PH")}
                     </span>
                     <span>−{formatMoney(payment.amount)}</span>
                   </li>

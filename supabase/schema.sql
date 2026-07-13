@@ -72,7 +72,7 @@ create table if not exists public.payments (
   id bigint generated always as identity primary key,
   folio_id bigint not null references public.folios(id),
   amount numeric(10,2) not null,
-  method text not null check (method in ('cash', 'card', 'transfer')),
+  method text not null check (method in ('cash', 'card', 'gcash', 'maya', 'transfer')),
   paid_at timestamptz not null default now()
 );
 
@@ -126,19 +126,19 @@ $$;
 
 insert into public.room_types (name, capacity, base_rate)
 values
-  ('Standard', 2, 89),
-  ('Deluxe', 3, 129),
-  ('Suite', 4, 189)
+  ('Standard', 2, 2500),
+  ('Deluxe', 3, 3800),
+  ('Suite', 4, 5500)
 on conflict (name) do update
 set capacity = excluded.capacity, base_rate = excluded.base_rate;
 
 insert into public.staff_members (name, role)
 select * from (values
-  ('Maya Chen', 'frontdesk'),
-  ('Jordan Blake', 'frontdesk'),
-  ('Sofia Rivera', 'housekeeping'),
-  ('Sam Okonkwo', 'housekeeping'),
-  ('Alex Morgan', 'manager')
+  ('Maria Santos', 'frontdesk'),
+  ('Juan Dela Cruz', 'frontdesk'),
+  ('Ana Reyes', 'housekeeping'),
+  ('Carlo Mendoza', 'housekeeping'),
+  ('Liza Villanueva', 'manager')
 ) as v(name, role)
 where not exists (select 1 from public.staff_members limit 1);
 

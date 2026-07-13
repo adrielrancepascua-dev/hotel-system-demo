@@ -12,18 +12,19 @@ import type {
   StaffMember,
 } from "@/lib/types";
 
+/** Nightly rates in Philippine pesos (typical boutique / midscale PH hotel) */
 export const ROOM_TYPES: RoomTypeRecord[] = [
-  { id: 1, name: "Standard", capacity: 2, base_rate: 89 },
-  { id: 2, name: "Deluxe", capacity: 3, base_rate: 129 },
-  { id: 3, name: "Suite", capacity: 4, base_rate: 189 },
+  { id: 1, name: "Standard", capacity: 2, base_rate: 2500 },
+  { id: 2, name: "Deluxe", capacity: 3, base_rate: 3800 },
+  { id: 3, name: "Suite", capacity: 4, base_rate: 5500 },
 ];
 
 export const STAFF_MEMBERS: StaffMember[] = [
-  { id: 1, name: "Maya Chen", role: "frontdesk" },
-  { id: 2, name: "Jordan Blake", role: "frontdesk" },
-  { id: 3, name: "Sofia Rivera", role: "housekeeping" },
-  { id: 4, name: "Sam Okonkwo", role: "housekeeping" },
-  { id: 5, name: "Alex Morgan", role: "manager" },
+  { id: 1, name: "Maria Santos", role: "frontdesk" },
+  { id: 2, name: "Juan Dela Cruz", role: "frontdesk" },
+  { id: 3, name: "Ana Reyes", role: "housekeeping" },
+  { id: 4, name: "Carlo Mendoza", role: "housekeeping" },
+  { id: 5, name: "Liza Villanueva", role: "manager" },
 ];
 
 const statusCycle: RoomStatus[] = [
@@ -35,14 +36,14 @@ const statusCycle: RoomStatus[] = [
 ];
 
 const guestNames = [
-  "Alex Rivera",
-  "Maya Thompson",
-  "Noah Patel",
-  "Zoe Kim",
-  "Omar Hassan",
-  "Emma Brooks",
-  "Liam Chen",
-  "Sofia Martin",
+  "Miguel Ramos",
+  "Sofia Garcia",
+  "Paolo Navarro",
+  "Angela Cruz",
+  "Diego Bautista",
+  "Isabella Torres",
+  "Rafael Lim",
+  "Camille Ong",
 ];
 
 function isoDaysFromNow(days: number): string {
@@ -89,7 +90,7 @@ export function buildDemoRequests(): RequestRecord[] {
       request_type: "towels",
       status: "pending",
       created_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-      notes: "Extra bath towels for two guests",
+      notes: "Extra bath towels for two guests, please",
       photo_url: null,
       completed_by_staff_id: null,
       completed_at: null,
@@ -100,7 +101,7 @@ export function buildDemoRequests(): RequestRecord[] {
       request_type: "late_checkout",
       status: "pending",
       created_at: new Date(Date.now() - 11 * 60 * 1000).toISOString(),
-      notes: "Requesting 2pm checkout",
+      notes: "Requesting 2:00 PM checkout — flight from NAIA is at 6 PM",
       photo_url: null,
       completed_by_staff_id: null,
       completed_at: null,
@@ -117,6 +118,10 @@ export function buildDemoRequests(): RequestRecord[] {
       completed_at: null,
     },
   ];
+}
+
+function phMobile(suffix: string): string {
+  return `+63 9${suffix.padStart(9, "0").slice(0, 9)}`;
 }
 
 function buildOccupiedReservations(rooms: RoomRecord[]): {
@@ -139,13 +144,14 @@ function buildOccupiedReservations(rooms: RoomRecord[]): {
     const reservationId = idx + 1;
     const folioId = idx + 1;
     const sources = ["walk_in", "ota", "phone"] as const;
+    const methods = ["gcash", "card", "maya"] as const;
 
     reservations.push({
       id: reservationId,
       room_id: room.id,
       guest_name: guestNameForRoom(room.room_number),
-      email: `guest${room.room_number}@example.com`,
-      phone: `+1-555-01${String(room.room_number).slice(-2)}`,
+      email: `guest${room.room_number}@email.com`,
+      phone: phMobile(`17${room.room_number}00`),
       check_in_date: checkIn,
       check_out_date: checkOut,
       source: sources[idx % 3],
@@ -176,13 +182,12 @@ function buildOccupiedReservations(rooms: RoomRecord[]): {
         id: payments.length + 1,
         folio_id: folioId,
         amount: Math.round(roomType.base_rate * 0.5),
-        method: "card",
+        method: methods[idx % methods.length],
         paid_at: new Date(Date.now() - idx * 1800 * 1000).toISOString(),
       });
     }
   });
 
-  // One checked-out historical stay for reports
   const readyRoom = rooms.find((r) => r.status === "ready");
   if (readyRoom) {
     const roomType = ROOM_TYPES.find((t) => t.id === readyRoom.room_type_id)!;
@@ -195,9 +200,9 @@ function buildOccupiedReservations(rooms: RoomRecord[]): {
     reservations.push({
       id: reservationId,
       room_id: readyRoom.id,
-      guest_name: "Harper Lane",
-      email: "harper@example.com",
-      phone: "+1-555-0199",
+      guest_name: "Patricia Gomez",
+      email: "patricia.gomez@email.com",
+      phone: "+63 917 555 0199",
       check_in_date: checkIn,
       check_out_date: checkOut,
       source: "ota",
@@ -228,7 +233,7 @@ function buildOccupiedReservations(rooms: RoomRecord[]): {
       id: payments.length + 1,
       folio_id: folioId,
       amount: roomCharge,
-      method: "card",
+      method: "gcash",
       paid_at: new Date(Date.now() - 3 * 86400 * 1000).toISOString(),
     });
   }
@@ -267,10 +272,10 @@ export function nightsForStay(checkIn: string, checkOut: string): number {
 }
 
 export function formatMoney(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-PH", {
     style: "currency",
-    currency: "USD",
+    currency: "PHP",
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 0,
   }).format(amount);
 }

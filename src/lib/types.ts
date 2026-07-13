@@ -48,7 +48,7 @@ export const CHARGE_CATEGORIES = ["room", "fnb", "service", "other"] as const;
 
 export type ChargeCategory = (typeof CHARGE_CATEGORIES)[number];
 
-export const PAYMENT_METHODS = ["cash", "card", "transfer"] as const;
+export const PAYMENT_METHODS = ["cash", "card", "gcash", "maya", "transfer"] as const;
 
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 

@@ -186,79 +186,92 @@ export function UnifiedOpsBoard() {
     );
   }
 
+  const roomSelected = selectedRoom != null;
+  const unpaidTotal = openBalances.reduce((s, row) => s + row.balance, 0);
+  const leavingRooms = departingToday
+    .slice(0, 3)
+    .map((r) => state.rooms.find((x) => x.id === r.room_id)?.room_number)
+    .filter(Boolean)
+    .join(", ");
+
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-4 sm:gap-4 sm:px-6 sm:py-5">
+    <section className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-6 sm:py-5">
       {toast && (
         <div className="hotel-alert hotel-alert-success sticky top-[3.75rem] z-30 shadow-md sm:top-20">
           {toast}
         </div>
       )}
 
-      {/* Shift handover — what the next desk person needs */}
-      <div className="grid gap-2 sm:grid-cols-3">
-        <article className="hotel-stat hotel-card-accent">
-          <p className="hotel-label">Leaving today</p>
-          <p className="hotel-stat-value mt-1">{departingToday.length}</p>
-          <p className="mt-1 text-xs text-muted">
-            {departingToday.length === 0
-              ? "No checkouts due"
-              : departingToday
-                  .slice(0, 3)
-                  .map((r) => {
-                    const room = state.rooms.find((x) => x.id === r.room_id);
-                    return room?.room_number;
-                  })
-                  .filter(Boolean)
-                  .join(", ")}
+      {/* Compact shift strip — hidden on mobile while a room is open */}
+      <div
+        className={`grid grid-cols-3 gap-1.5 sm:gap-3 ${roomSelected ? "hidden lg:grid" : ""}`}
+      >
+        <article className="hotel-stat hotel-card-accent min-w-0 px-2 py-2 sm:px-5 sm:py-4">
+          <p className="hotel-label truncate">Leaving</p>
+          <p className="hotel-stat-value mt-0.5 text-xl sm:mt-1 sm:text-[2rem]">
+            {departingToday.length}
+          </p>
+          <p className="mt-0.5 truncate text-[0.625rem] text-muted sm:mt-1 sm:text-xs">
+            {departingToday.length === 0 ? "None today" : leavingRooms || "Due today"}
           </p>
         </article>
-        <article className="hotel-stat hotel-card-accent">
-          <p className="hotel-label">Unpaid balances</p>
-          <p className="hotel-stat-value mt-1">
-            {formatMoney(openBalances.reduce((s, row) => s + row.balance, 0))}
+        <article className="hotel-stat hotel-card-accent min-w-0 px-2 py-2 sm:px-5 sm:py-4">
+          <p className="hotel-label truncate">Unpaid</p>
+          <p className="hotel-stat-value mt-0.5 truncate text-base leading-tight sm:mt-1 sm:text-[2rem]">
+            {formatMoney(unpaidTotal)}
           </p>
-          <p className="mt-1 text-xs text-muted">
-            {openBalances.length} guest{openBalances.length === 1 ? "" : "s"} with open bills
+          <p className="mt-0.5 truncate text-[0.625rem] text-muted sm:mt-1 sm:text-xs">
+            {openBalances.length} open bill{openBalances.length === 1 ? "" : "s"}
           </p>
         </article>
-        <article className="hotel-stat hotel-card-accent">
-          <p className="hotel-label">Tell housekeeping</p>
-          <p className="hotel-stat-value mt-1">{dirtyRooms.length}</p>
-          <p className="mt-1 text-xs text-muted">
-            Dirty / being cleaned — radio or Messenger, then tap Ready when done
+        <article className="hotel-stat hotel-card-accent min-w-0 px-2 py-2 sm:px-5 sm:py-4">
+          <p className="hotel-label truncate">Dirty</p>
+          <p className="hotel-stat-value mt-0.5 text-xl sm:mt-1 sm:text-[2rem]">
+            {dirtyRooms.length}
+          </p>
+          <p className="mt-0.5 truncate text-[0.625rem] text-muted sm:mt-1 sm:text-xs">
+            Radio HK, then Ready
           </p>
         </article>
       </div>
 
       {pendingRequests.length > 0 && (
-        <div className="hotel-card p-3 sm:p-4">
+        <div
+          className={`hotel-card p-3 sm:p-4 ${roomSelected ? "hidden lg:block" : ""}`}
+        >
           <div className="flex items-center justify-between gap-2">
             <p className="hotel-label text-gold">
-              Guest asks ({pendingRequests.length})
+              Guest asks · {pendingRequests.length}
             </p>
             <Link href="/requests" className="text-xs font-semibold text-gold underline">
-              See all
+              All
             </Link>
           </div>
           <ul className="mt-2 space-y-2">
-            {pendingRequests.slice(0, 3).map((request) => (
+            {pendingRequests.slice(0, 2).map((request) => (
               <li
                 key={request.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-cream px-3 py-2 text-sm"
+                className="flex items-start gap-2 rounded-lg bg-cream px-2.5 py-2 sm:items-center sm:px-3"
               >
-                <span className="text-navy">
-                  Rm {request.room_number} · {requestTypeLabels[request.request_type]}
-                  {request.notes ? ` — ${request.notes}` : ""}
-                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-navy">
+                    Rm {request.room_number} · {requestTypeLabels[request.request_type]}
+                  </p>
+                  {request.notes ? (
+                    <p className="mt-0.5 line-clamp-1 text-xs text-muted">{request.notes}</p>
+                  ) : null}
+                </div>
                 <button
                   type="button"
-                  className="hotel-btn hotel-btn-secondary min-h-9 px-3 text-xs"
+                  className="hotel-btn hotel-btn-secondary min-h-9 shrink-0 px-2.5 text-xs"
                   onClick={() => {
                     completeRequest(request.id);
-                    flash(`Done: ${requestTypeLabels[request.request_type]} · Rm ${request.room_number}`);
+                    flash(
+                      `Done: ${requestTypeLabels[request.request_type]} · Rm ${request.room_number}`,
+                    );
                   }}
                 >
-                  Mark done
+                  Done
                 </button>
               </li>
             ))}
@@ -266,28 +279,36 @@ export function UnifiedOpsBoard() {
         </div>
       )}
 
-      <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+      <div
+        className={`-mx-3 flex gap-1.5 overflow-x-auto px-3 pb-0.5 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:gap-2 sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden ${
+          roomSelected ? "hidden lg:flex" : ""
+        }`}
+      >
         {(
           [
-            ["all", "All rooms"],
-            ["sell", "Ready to sell"],
+            ["all", "All"],
+            ["sell", "Ready"],
             ["inhouse", "In-house"],
-            ["dirty", "Dirty / HK"],
-            ["ooo", "Out of order"],
+            ["dirty", "Dirty"],
+            ["ooo", "OOO"],
           ] as const
         ).map(([key, label]) => (
           <button
             key={key}
             type="button"
             onClick={() => setFilter(key)}
-            className={`hotel-btn shrink-0 ${filter === key ? "hotel-btn-gold" : "hotel-btn-secondary"}`}
+            className={`hotel-btn shrink-0 px-3 text-xs sm:px-5 sm:text-sm ${
+              filter === key ? "hotel-btn-gold" : "hotel-btn-secondary"
+            }`}
           >
             {label}
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3">
+      <div
+        className={`grid grid-cols-5 gap-1.5 sm:gap-3 ${roomSelected ? "hidden lg:grid" : ""}`}
+      >
         {summaryOrder.map(({ key, filter: chipFilter }) => {
           const theme = roomStatusStyles[key];
           return (
@@ -295,31 +316,48 @@ export function UnifiedOpsBoard() {
               key={key}
               type="button"
               onClick={() => setFilter(chipFilter)}
-              className="hotel-stat min-w-0 text-left transition hover:border-gold/50"
+              className={`hotel-stat min-w-0 px-1.5 py-2 text-left transition hover:border-gold/50 sm:px-5 sm:py-4 ${
+                filter === chipFilter ? "border-gold/60 ring-1 ring-gold/40" : ""
+              }`}
             >
-              <div className="flex items-center gap-1.5">
-                <span className={`h-2 w-2 shrink-0 rounded-full ${theme.dot}`} />
-                <p className="hotel-label truncate">{theme.shortLabel}</p>
+              <div className="flex items-center justify-center gap-1 sm:justify-start sm:gap-1.5">
+                <span className={`h-1.5 w-1.5 shrink-0 rounded-full sm:h-2 sm:w-2 ${theme.dot}`} />
+                <p className="hotel-label truncate text-[0.5rem] sm:text-[0.6875rem]">
+                  {theme.shortLabel}
+                </p>
               </div>
-              <p className="hotel-stat-value mt-1">{stats[key]}</p>
+              <p className="hotel-stat-value mt-1 text-center text-lg sm:mt-1 sm:text-left sm:text-[2rem]">
+                {stats[key]}
+              </p>
             </button>
           );
         })}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid gap-3 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         <aside
           ref={actionsPanelRef}
-          className={`hotel-card hotel-card-accent order-1 h-fit p-4 transition-all duration-200 ease-out sm:p-5 lg:sticky lg:top-20 lg:order-2 ${
+          className={`hotel-card hotel-card-accent order-1 h-fit p-3.5 transition-all duration-200 ease-out sm:p-5 lg:sticky lg:top-20 lg:order-2 ${
             selectedRoom ? "block" : "hidden lg:block"
           } ${isPanelClosing ? "pointer-events-none translate-x-2 opacity-0" : "translate-x-0 opacity-100"}`}
         >
           {selectedRoom ? (
             <>
-              <p className="hotel-label text-gold">Front desk actions</p>
-              <h2 className="font-display mt-1 text-xl font-semibold text-navy sm:text-2xl">
-                Room {selectedRoom.room_number}
-              </h2>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="hotel-label text-gold">Room actions</p>
+                  <h2 className="font-display mt-0.5 text-xl font-semibold text-navy sm:mt-1 sm:text-2xl">
+                    Room {selectedRoom.room_number}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="hotel-btn hotel-btn-secondary min-h-9 shrink-0 px-3 text-xs lg:hidden"
+                  onClick={clearRoomPanel}
+                >
+                  Back
+                </button>
+              </div>
               <p className="mt-1 text-sm text-muted">
                 <span
                   className={`mr-1.5 inline-block h-2 w-2 rounded-full ${roomStatusStyles[selectedRoom.status].dot}`}
@@ -331,7 +369,7 @@ export function UnifiedOpsBoard() {
               {activeReservation && (
                 <div className="mt-3 rounded-lg bg-cream px-3 py-2 text-sm">
                   <p className="font-semibold text-navy">{activeReservation.guest_name}</p>
-                  <p className="text-muted">
+                  <p className="truncate text-muted">
                     Out {activeReservation.check_out_date}
                     {activeReservation.phone ? ` · ${activeReservation.phone}` : ""}
                   </p>
@@ -390,7 +428,7 @@ export function UnifiedOpsBoard() {
                       className="staff-mode-action staff-mode-action-secondary"
                       onClick={() => setShowCharge((v) => !v)}
                     >
-                      {showCharge ? "Hide charges" : "Add charge (minibar, fee…)"}
+                      {showCharge ? "Hide charges" : "Add charge"}
                     </button>
                     <button
                       type="button"
@@ -412,8 +450,7 @@ export function UnifiedOpsBoard() {
                   selectedRoom.status === "cleaning") && (
                   <>
                     <p className="rounded-lg border border-amber-300/50 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:bg-amber-950/30 dark:text-amber-100">
-                      Radio or message HK for this room. When they say it&apos;s done, tap
-                      below — you don&apos;t need them on a screen.
+                      Radio HK for this room. When done, tap Ready below.
                     </p>
                     <button
                       type="button"
@@ -426,7 +463,7 @@ export function UnifiedOpsBoard() {
                         )
                       }
                     >
-                      HK finished — mark ready to sell
+                      Mark ready to sell
                     </button>
                     {selectedRoom.status === "needs_cleaning" && (
                       <button
@@ -440,7 +477,7 @@ export function UnifiedOpsBoard() {
                           )
                         }
                       >
-                        HK started (optional note)
+                        HK started
                       </button>
                     )}
                     <button
@@ -631,7 +668,7 @@ export function UnifiedOpsBoard() {
 
               <button
                 type="button"
-                className="staff-mode-action staff-mode-action-secondary mt-4"
+                className="staff-mode-action staff-mode-action-secondary mt-4 hidden lg:inline-flex"
                 onClick={clearRoomPanel}
               >
                 Close
@@ -648,7 +685,11 @@ export function UnifiedOpsBoard() {
           )}
         </aside>
 
-        <div className="order-2 grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:order-1 xl:grid-cols-4">
+        <div
+          className={`order-2 grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:order-1 xl:grid-cols-4 ${
+            roomSelected ? "hidden lg:grid" : ""
+          }`}
+        >
           {rooms.map((room) => {
             const theme = roomStatusStyles[room.status];
             const type = getRoomType(room, state.roomTypes);
@@ -673,7 +714,7 @@ export function UnifiedOpsBoard() {
                 }}
                 aria-pressed={isSelected}
                 aria-label={`Room ${room.room_number}, ${theme.label}`}
-                className={`staff-mode-card min-h-28 w-full rounded-xl border p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 sm:min-h-32 sm:p-4 ${theme.card} ${
+                className={`staff-mode-card min-h-24 w-full rounded-xl border p-2.5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 sm:min-h-32 sm:p-4 ${theme.card} ${
                   isSelected ? "ring-2 ring-gold/60 shadow-md" : ""
                 }`}
               >
@@ -681,17 +722,17 @@ export function UnifiedOpsBoard() {
                   <p className="hotel-label truncate text-muted">
                     {type?.name ?? "Room"}
                   </p>
-                  <span className={`mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full ${theme.dot}`} />
+                  <span className={`mt-0.5 h-2 w-2 shrink-0 rounded-full sm:h-2.5 sm:w-2.5 ${theme.dot}`} />
                 </div>
-                <p className="font-display mt-0.5 text-2xl font-semibold text-navy sm:text-3xl">
+                <p className="font-display mt-0.5 text-xl font-semibold text-navy sm:text-3xl">
                   {room.room_number}
                 </p>
                 <span
-                  className={`staff-mode-badge mt-2 inline-flex rounded-full px-2 py-0.5 text-[0.625rem] sm:px-2.5 sm:text-xs ${theme.badge}`}
+                  className={`staff-mode-badge mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[0.625rem] sm:mt-2 sm:px-2.5 sm:text-xs ${theme.badge}`}
                 >
                   {theme.shortLabel}
                 </span>
-                <p className="mt-2 truncate text-[0.6875rem] text-muted sm:text-xs">
+                <p className="mt-1.5 truncate text-[0.6875rem] text-muted sm:mt-2 sm:text-xs">
                   {reservation
                     ? `${reservation.guest_name}${due > 0 ? ` · ${formatMoney(due)}` : ""}`
                     : room.status === "ready"

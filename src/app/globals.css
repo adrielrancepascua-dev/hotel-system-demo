@@ -115,7 +115,7 @@ html[data-theme="dark"] body {
     border-radius: 0.75rem;
     border: 1px solid var(--border);
     background-color: var(--surface-elevated);
-    padding: 0.625rem 0.75rem;
+    padding: 0.5rem 0.5rem;
     box-shadow: 0 1px 3px rgba(var(--shadow-color), 0.05);
   }
 
@@ -157,12 +157,12 @@ html[data-theme="dark"] body {
 
   .hotel-btn {
     display: inline-flex;
-    min-height: 2.5rem;
+    min-height: 2.25rem;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     border-radius: 0.625rem;
-    padding: 0.5rem 0.875rem;
+    padding: 0.375rem 0.75rem;
     font-size: 0.8125rem;
     font-weight: 600;
     line-height: 1.25;

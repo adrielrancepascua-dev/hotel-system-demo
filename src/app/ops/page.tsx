@@ -1,13 +1,13 @@
-import { OperationsPageLayout } from "@/components/OperationsPageLayout";
+import { AppHeader } from "@/components/AppHeader";
 import { UnifiedOpsBoard } from "@/components/UnifiedOpsBoard";
 
 export default function OpsPage() {
   return (
-    <OperationsPageLayout
-      title="Front Desk"
-      subtitle="Your notebook for the shift — check guests in and out, log charges, and update room status after you radio housekeeping."
-    >
-      <UnifiedOpsBoard />
-    </OperationsPageLayout>
+    <div className="hotel-page">
+      <AppHeader />
+      <main id="main-content">
+        <UnifiedOpsBoard />
+      </main>
+    </div>
   );
 }

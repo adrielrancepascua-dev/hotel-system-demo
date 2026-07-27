@@ -41,7 +41,7 @@ export function AppHeader() {
           </div>
           <div className="min-w-0">
             <p className="hotel-label text-gold">Demo Hotel</p>
-            <h1 className="font-display truncate text-base font-semibold leading-tight text-navy sm:text-lg md:text-xl">
+            <h1 className="font-display truncate text-lg font-semibold leading-tight text-navy sm:text-lg md:text-xl">
               Front Desk
             </h1>
           </div>

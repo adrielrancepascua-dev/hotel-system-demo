@@ -5,7 +5,7 @@ export default function ReservationsPage() {
   return (
     <OperationsPageLayout
       title="Bookings"
-      subtitle="Future stays and walk-in bookings. Day-to-day check-in still happens on Front Desk."
+      subtitle="Save future stays here. Day-to-day check-in is on Front Desk."
     >
       <ReservationsPanel />
     </OperationsPageLayout>

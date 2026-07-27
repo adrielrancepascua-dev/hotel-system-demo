@@ -36,8 +36,8 @@ export const roomStatusStyles: Record<
   maintenance: {
     card: "bg-sky-50/80 border-sky-300/70 dark:bg-sky-950/25 dark:border-sky-700/50",
     badge: "bg-sky-600/90 text-white dark:bg-sky-700",
-    label: "Out of order",
-    shortLabel: "OOO",
+    label: "Broken / can't sell",
+    shortLabel: "Broken",
     dot: "bg-sky-500",
   },
 };

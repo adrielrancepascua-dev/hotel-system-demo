@@ -290,7 +290,7 @@ export function UnifiedOpsBoard() {
             ["sell", "Ready"],
             ["inhouse", "In-house"],
             ["dirty", "Dirty"],
-            ["ooo", "OOO"],
+            ["ooo", "Broken"],
           ] as const
         ).map(([key, label]) => (
           <button
@@ -401,11 +401,11 @@ export function UnifiedOpsBoard() {
                         changeRoomStatus(
                           selectedRoom.id,
                           "maintenance",
-                          `Room ${selectedRoom.room_number} marked out of order`,
+                          `Room ${selectedRoom.room_number} marked broken`,
                         )
                       }
                     >
-                      Mark out of order
+                      Mark as broken
                     </button>
                   </>
                 )}
@@ -437,11 +437,11 @@ export function UnifiedOpsBoard() {
                         changeRoomStatus(
                           selectedRoom.id,
                           "maintenance",
-                          `Room ${selectedRoom.room_number} marked out of order`,
+                          `Room ${selectedRoom.room_number} marked broken`,
                         )
                       }
                     >
-                      Mark out of order
+                      Mark as broken
                     </button>
                   </>
                 )}
@@ -487,11 +487,11 @@ export function UnifiedOpsBoard() {
                         changeRoomStatus(
                           selectedRoom.id,
                           "maintenance",
-                          `Room ${selectedRoom.room_number} out of order`,
+                          `Room ${selectedRoom.room_number} marked broken`,
                         )
                       }
                     >
-                      Mark out of order
+                      Mark as broken
                     </button>
                   </>
                 )}

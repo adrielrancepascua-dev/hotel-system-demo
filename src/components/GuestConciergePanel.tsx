@@ -159,7 +159,7 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
 
         {showBill && folio && (
           <article className="hotel-card p-5">
-            <h2 className="hotel-label">Folio charges</h2>
+            <h2 className="hotel-label">Bill charges</h2>
             <ul className="mt-3 space-y-2">
               {charges.map((charge) => (
                 <li

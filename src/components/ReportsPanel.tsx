@@ -35,7 +35,7 @@ export function ReportsPanel() {
       hint: `MTD ${formatMoney(metrics.revenueMtd)}`,
     },
     {
-      label: "Open folio balance",
+      label: "Unpaid bills",
       value: formatMoney(metrics.openFolioBalance),
       hint: "Outstanding guest balances",
     },

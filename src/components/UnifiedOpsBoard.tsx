@@ -55,6 +55,7 @@ export function UnifiedOpsBoard() {
   const [chargeAmount, setChargeAmount] = useState(150);
   const [showCharge, setShowCharge] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [isPanelClosing, setIsPanelClosing] = useState(false);
   const actionsPanelRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -140,19 +141,31 @@ export function UnifiedOpsBoard() {
     setToast(message);
   }
 
-  function finishCheckout(closeTheFolio: boolean) {
+  function clearRoomPanel() {
+    setIsPanelClosing(true);
+    setCheckoutStep("idle");
+    setShowCharge(false);
+    setShowCheckIn(false);
+    window.setTimeout(() => {
+      setSelectedRoomId(null);
+      setIsPanelClosing(false);
+    }, 220);
+  }
+
+  function changeRoomStatus(roomId: number, nextStatus: RoomStatus, message: string) {
+    updateRoomStatus(roomId, nextStatus);
+    flash(message);
+    clearRoomPanel();
+  }
+
+  function finishCheckout(closeTheBill: boolean) {
     if (!selectedRoom) return;
     const roomNumber = selectedRoom.room_number;
-    checkOutGuest(selectedRoom.id, closeTheFolio);
+    checkOutGuest(selectedRoom.id, closeTheBill);
     setCheckoutStep("done");
     setShowCharge(false);
-    flash(
-      `Room ${roomNumber} checked out · marked Dirty. Radio housekeeping now.`,
-    );
-    window.setTimeout(() => {
-      setCheckoutStep("idle");
-      setSelectedRoomId(null);
-    }, 1200);
+    flash(`Room ${roomNumber} checked out · marked Dirty. Radio housekeeping now.`);
+    clearRoomPanel();
   }
 
   function handleTakePaymentThenCheckout() {
@@ -205,7 +218,7 @@ export function UnifiedOpsBoard() {
             {formatMoney(openBalances.reduce((s, row) => s + row.balance, 0))}
           </p>
           <p className="mt-1 text-xs text-muted">
-            {openBalances.length} in-house folio{openBalances.length === 1 ? "" : "s"}
+            {openBalances.length} guest{openBalances.length === 1 ? "" : "s"} with open bills
           </p>
         </article>
         <article className="hotel-stat hotel-card-accent">
@@ -297,9 +310,9 @@ export function UnifiedOpsBoard() {
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         <aside
           ref={actionsPanelRef}
-          className={`hotel-card hotel-card-accent order-1 h-fit p-4 sm:p-5 lg:sticky lg:top-20 lg:order-2 ${
+          className={`hotel-card hotel-card-accent order-1 h-fit p-4 transition-all duration-200 ease-out sm:p-5 lg:sticky lg:top-20 lg:order-2 ${
             selectedRoom ? "block" : "hidden lg:block"
-          }`}
+          } ${isPanelClosing ? "pointer-events-none translate-x-2 opacity-0" : "translate-x-0 opacity-100"}`}
         >
           {selectedRoom ? (
             <>
@@ -324,7 +337,7 @@ export function UnifiedOpsBoard() {
                   </p>
                   {activeFolio && (
                     <p className="mt-1 font-medium text-navy">
-                      Folio balance {formatMoney(balance)}
+                      Amount due {formatMoney(balance)}
                     </p>
                   )}
                 </div>
@@ -346,10 +359,13 @@ export function UnifiedOpsBoard() {
                     <button
                       type="button"
                       className="staff-mode-action staff-mode-action-secondary"
-                      onClick={() => {
-                        updateRoomStatus(selectedRoom.id, "maintenance");
-                        flash(`Room ${selectedRoom.room_number} marked out of order`);
-                      }}
+                      onClick={() =>
+                        changeRoomStatus(
+                          selectedRoom.id,
+                          "maintenance",
+                          `Room ${selectedRoom.room_number} marked out of order`,
+                        )
+                      }
                     >
                       Mark out of order
                     </button>
@@ -379,10 +395,13 @@ export function UnifiedOpsBoard() {
                     <button
                       type="button"
                       className="staff-mode-action staff-mode-action-secondary"
-                      onClick={() => {
-                        updateRoomStatus(selectedRoom.id, "maintenance");
-                        flash(`Room ${selectedRoom.room_number} marked out of order`);
-                      }}
+                      onClick={() =>
+                        changeRoomStatus(
+                          selectedRoom.id,
+                          "maintenance",
+                          `Room ${selectedRoom.room_number} marked out of order`,
+                        )
+                      }
                     >
                       Mark out of order
                     </button>
@@ -399,11 +418,13 @@ export function UnifiedOpsBoard() {
                     <button
                       type="button"
                       className="staff-mode-action staff-mode-action-primary"
-                      onClick={() => {
-                        updateRoomStatus(selectedRoom.id, "ready");
-                        flash(`Room ${selectedRoom.room_number} ready to sell`);
-                        setSelectedRoomId(null);
-                      }}
+                      onClick={() =>
+                        changeRoomStatus(
+                          selectedRoom.id,
+                          "ready",
+                          `Room ${selectedRoom.room_number} ready to sell`,
+                        )
+                      }
                     >
                       HK finished — mark ready to sell
                     </button>
@@ -411,10 +432,13 @@ export function UnifiedOpsBoard() {
                       <button
                         type="button"
                         className="staff-mode-action staff-mode-action-secondary"
-                        onClick={() => {
-                          updateRoomStatus(selectedRoom.id, "cleaning");
-                          flash(`Room ${selectedRoom.room_number}: noted as being cleaned`);
-                        }}
+                        onClick={() =>
+                          changeRoomStatus(
+                            selectedRoom.id,
+                            "cleaning",
+                            `Room ${selectedRoom.room_number}: noted as being cleaned`,
+                          )
+                        }
                       >
                         HK started (optional note)
                       </button>
@@ -422,10 +446,13 @@ export function UnifiedOpsBoard() {
                     <button
                       type="button"
                       className="staff-mode-action staff-mode-action-secondary"
-                      onClick={() => {
-                        updateRoomStatus(selectedRoom.id, "maintenance");
-                        flash(`Room ${selectedRoom.room_number} out of order`);
-                      }}
+                      onClick={() =>
+                        changeRoomStatus(
+                          selectedRoom.id,
+                          "maintenance",
+                          `Room ${selectedRoom.room_number} out of order`,
+                        )
+                      }
                     >
                       Mark out of order
                     </button>
@@ -437,17 +464,26 @@ export function UnifiedOpsBoard() {
                     <button
                       type="button"
                       className="staff-mode-action staff-mode-action-primary"
-                      onClick={() => {
-                        updateRoomStatus(selectedRoom.id, "ready");
-                        flash(`Room ${selectedRoom.room_number} back on sale`);
-                      }}
+                      onClick={() =>
+                        changeRoomStatus(
+                          selectedRoom.id,
+                          "ready",
+                          `Room ${selectedRoom.room_number} back on sale`,
+                        )
+                      }
                     >
                       Fixed — ready to sell
                     </button>
                     <button
                       type="button"
                       className="staff-mode-action staff-mode-action-secondary"
-                      onClick={() => updateRoomStatus(selectedRoom.id, "needs_cleaning")}
+                      onClick={() =>
+                        changeRoomStatus(
+                          selectedRoom.id,
+                          "needs_cleaning",
+                          `Room ${selectedRoom.room_number} needs cleaning`,
+                        )
+                      }
                     >
                       Needs cleaning first
                     </button>
@@ -462,11 +498,11 @@ export function UnifiedOpsBoard() {
                     e.preventDefault();
                     if (chargeAmount <= 0) return;
                     addCharge(activeFolio.id, chargeDesc || "Charge", chargeAmount, "other");
-                    flash(`Added ${formatMoney(chargeAmount)} to folio`);
+                    flash(`Added ${formatMoney(chargeAmount)} to bill`);
                     setShowCharge(false);
                   }}
                 >
-                  <p className="hotel-label">Add to folio</p>
+                  <p className="hotel-label">Add to bill</p>
                   <input
                     value={chargeDesc}
                     onChange={(e) => setChargeDesc(e.target.value)}
@@ -572,7 +608,7 @@ export function UnifiedOpsBoard() {
                     className="staff-mode-action staff-mode-action-secondary"
                     onClick={() => finishCheckout(false)}
                   >
-                    Check out, settle folio later
+                    Check out, pay bill later
                   </button>
                   <button
                     type="button"
@@ -589,19 +625,14 @@ export function UnifiedOpsBoard() {
                   href={`/billing/${activeFolio.id}`}
                   className="mt-3 block text-center text-xs font-semibold text-gold underline"
                 >
-                  Full receipt / folio detail
+                  View full receipt
                 </Link>
               )}
 
               <button
                 type="button"
                 className="staff-mode-action staff-mode-action-secondary mt-4"
-                onClick={() => {
-                  setSelectedRoomId(null);
-                  setCheckoutStep("idle");
-                  setShowCharge(false);
-                  setShowCheckIn(false);
-                }}
+                onClick={clearRoomPanel}
               >
                 Close
               </button>
@@ -635,6 +666,7 @@ export function UnifiedOpsBoard() {
                 key={room.id}
                 type="button"
                 onClick={() => {
+                  setIsPanelClosing(false);
                   setSelectedRoomId(room.id);
                   setCheckoutStep("idle");
                   setShowCharge(false);
@@ -678,7 +710,10 @@ export function UnifiedOpsBoard() {
           roomNumber={selectedRoom.room_number}
           defaultRate={selectedType.base_rate}
           onClose={() => setShowCheckIn(false)}
-          onSuccess={() => flash(`Checked in · Room ${selectedRoom.room_number}`)}
+          onSuccess={() => {
+            flash(`Checked in · Room ${selectedRoom.room_number}`);
+            clearRoomPanel();
+          }}
         />
       )}
     </section>

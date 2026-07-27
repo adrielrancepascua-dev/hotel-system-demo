@@ -4,8 +4,8 @@ import { BillingPanel } from "@/components/BillingPanel";
 export default function BillingPage() {
   return (
     <OperationsPageLayout
-      title="Billing & Folios"
-      subtitle="Room rates, incidental charges, payments, and receipts — the financial spine of the stay."
+      title="Billing & Guest Bills"
+      subtitle="Room rates, extra charges, payments, and receipts."
     >
       <BillingPanel />
     </OperationsPageLayout>

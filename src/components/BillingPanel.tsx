@@ -60,7 +60,7 @@ export function BillingPanel() {
             onClick={() => setStatusFilter(key)}
             className={`hotel-btn shrink-0 ${statusFilter === key ? "hotel-btn-gold" : "hotel-btn-secondary"}`}
           >
-            {key === "all" ? "All folios" : key === "open" ? "Open" : "Closed"}
+            {key === "all" ? "All bills" : key === "open" ? "Open" : "Closed"}
           </button>
         ))}
       </div>
@@ -68,7 +68,7 @@ export function BillingPanel() {
       <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)]">
         <div className="flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-2 lg:overflow-visible lg:pb-0">
           {folios.length === 0 ? (
-            <p className="text-sm text-muted">No folios in this filter.</p>
+            <p className="text-sm text-muted">No bills in this filter.</p>
           ) : (
             folios.map((folio) => {
               const res = state.reservations.find((r) => r.id === folio.reservation_id);
@@ -87,7 +87,7 @@ export function BillingPanel() {
                 >
                   <p className="truncate font-medium text-navy">{res?.guest_name ?? "Guest"}</p>
                   <p className="text-xs text-muted">
-                    Folio #{folio.id} · {folio.status} · {formatMoney(bal)} due
+                    Bill #{folio.id} · {folio.status} · {formatMoney(bal)} due
                   </p>
                 </button>
               );
@@ -99,7 +99,7 @@ export function BillingPanel() {
           <div className="hotel-card hotel-card-accent p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="hotel-label text-gold">Folio #{selected.id}</p>
+                <p className="hotel-label text-gold">Bill #{selected.id}</p>
                 <h3 className="font-display mt-1 text-2xl font-semibold text-navy">
                   {reservation.guest_name}
                 </h3>
@@ -243,14 +243,14 @@ export function BillingPanel() {
                   className="hotel-btn hotel-btn-secondary"
                   onClick={() => closeFolio(selected.id)}
                 >
-                  Close folio
+                  Close bill
                 </button>
               )}
             </div>
           </div>
         ) : (
           <div className="hotel-card py-12 text-center">
-            <p className="font-display text-xl text-navy">Select a folio</p>
+            <p className="font-display text-xl text-navy">Select a bill</p>
           </div>
         )}
       </div>

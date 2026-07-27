@@ -39,7 +39,7 @@ export default function FolioReceiptPage({
           <p className="text-sm text-muted">Loading receipt…</p>
         ) : !folio || !reservation ? (
           <div className="hotel-card p-8 text-center">
-            <p className="font-display text-xl text-navy">Folio not found</p>
+            <p className="font-display text-xl text-navy">Bill not found</p>
             <Link href="/billing" className="hotel-btn hotel-btn-secondary mt-4 inline-flex">
               Back to billing
             </Link>
@@ -80,7 +80,7 @@ export default function FolioReceiptPage({
                 </dd>
               </div>
               <div>
-                <dt className="hotel-label">Folio</dt>
+                <dt className="hotel-label">Bill</dt>
                 <dd className="text-navy">
                   #{folio.id} · {folio.status}
                 </dd>

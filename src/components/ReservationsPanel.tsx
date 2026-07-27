@@ -129,7 +129,7 @@ export function ReservationsPanel() {
                 </p>
                 {folio && balance != null && (
                   <p className="mt-2 text-sm font-medium text-navy">
-                    Folio #{folio.id}: {formatMoney(balance)} balance ·{" "}
+                    Bill #{folio.id}: {formatMoney(balance)} due ·{" "}
                     <Link href={`/billing/${folio.id}`} className="text-gold underline">
                       View
                     </Link>

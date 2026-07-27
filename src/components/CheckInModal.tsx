@@ -12,6 +12,7 @@ type CheckInModalProps = {
   roomNumber: string;
   defaultRate: number;
   onClose: () => void;
+  onSuccess?: () => void;
   mode?: "check_in" | "book";
 };
 
@@ -19,34 +20,30 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function tomorrowIso(): string {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
-}
-
 export function CheckInModal({
   roomId,
   roomNumber,
   defaultRate,
   onClose,
+  onSuccess,
   mode = "check_in",
 }: CheckInModalProps) {
   const { checkInGuest, createReservation } = useDemoStore();
   const [guestName, setGuestName] = useState("");
-  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [nights, setNights] = useState(1);
+  const [showMore, setShowMore] = useState(false);
+  const [email, setEmail] = useState("");
   const [checkInDate, setCheckInDate] = useState(todayIso());
-  const [checkOutDate, setCheckOutDate] = useState(tomorrowIso());
   const [source, setSource] = useState<ReservationSource>("walk_in");
   const [nightlyRate, setNightlyRate] = useState(defaultRate);
   const [error, setError] = useState<string | null>(null);
 
-  const nights = useMemo(() => {
+  const checkOutDate = useMemo(() => {
     const start = new Date(checkInDate);
-    const end = new Date(checkOutDate);
-    return Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000));
-  }, [checkInDate, checkOutDate]);
+    start.setDate(start.getDate() + Math.max(1, nights));
+    return start.toISOString().slice(0, 10);
+  }, [checkInDate, nights]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -54,10 +51,6 @@ export function CheckInModal({
 
     if (!guestName.trim()) {
       setError("Guest name is required.");
-      return;
-    }
-    if (checkOutDate <= checkInDate) {
-      setError("Check-out must be after check-in.");
       return;
     }
 
@@ -75,32 +68,36 @@ export function CheckInModal({
     if (mode === "book") {
       const id = createReservation({ ...input, status: "booked" });
       if (!id) {
-        setError("Could not create reservation. Room may not be ready.");
+        setError("Room must be ready to book.");
         return;
       }
     } else {
       const result = checkInGuest(input);
       if (!result) {
-        setError("Could not check in. Room must be ready.");
+        setError("Room must be ready to check in.");
         return;
       }
     }
 
+    onSuccess?.();
     onClose();
   }
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-navy-deep/50 p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-navy-deep/50 p-3 sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="checkin-title"
     >
-      <div className="hotel-card hotel-card-accent max-h-[90vh] w-full max-w-lg overflow-y-auto p-5 sm:p-6">
+      <div className="hotel-card hotel-card-accent max-h-[92vh] w-full max-w-md overflow-y-auto p-5 sm:p-6">
         <p className="hotel-label text-gold">Room {roomNumber}</p>
         <h2 id="checkin-title" className="font-display mt-1 text-2xl font-semibold text-navy">
-          {mode === "book" ? "New reservation" : "Check in guest"}
+          {mode === "book" ? "New booking" : "Quick check-in"}
         </h2>
+        <p className="mt-1 text-sm text-muted">
+          Name + nights is enough for walk-ins. Add contact if you want.
+        </p>
         <div className="hotel-divider my-4" />
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -113,29 +110,48 @@ export function CheckInModal({
               required
               value={guestName}
               onChange={(e) => setGuestName(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-navy"
-              placeholder="Full name"
+              className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-3 text-base text-navy"
+              placeholder="e.g. Miguel Ramos"
               autoFocus
             />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="hotel-label" htmlFor="guest-email">
-                Email
+              <label className="hotel-label" htmlFor="nights">
+                Nights
               </label>
-              <input
-                id="guest-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-navy"
-                placeholder="juan@email.com"
-              />
+              <div className="mt-1 flex items-center gap-2">
+                <button
+                  type="button"
+                  className="hotel-btn hotel-btn-secondary min-h-11 min-w-11 px-0"
+                  onClick={() => setNights((n) => Math.max(1, n - 1))}
+                  aria-label="Fewer nights"
+                >
+                  −
+                </button>
+                <input
+                  id="nights"
+                  type="number"
+                  min={1}
+                  max={30}
+                  value={nights}
+                  onChange={(e) => setNights(Math.max(1, Number(e.target.value) || 1))}
+                  className="w-full rounded-lg border border-border bg-surface px-2 py-2.5 text-center text-base text-navy"
+                />
+                <button
+                  type="button"
+                  className="hotel-btn hotel-btn-secondary min-h-11 min-w-11 px-0"
+                  onClick={() => setNights((n) => Math.min(30, n + 1))}
+                  aria-label="More nights"
+                >
+                  +
+                </button>
+              </div>
             </div>
             <div>
               <label className="hotel-label" htmlFor="guest-phone">
-                Phone
+                Phone <span className="normal-case tracking-normal">(optional)</span>
               </label>
               <input
                 id="guest-phone"
@@ -143,77 +159,100 @@ export function CheckInModal({
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-navy"
-                placeholder="09XX XXX XXXX"
+                placeholder="09XX…"
               />
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <label className="hotel-label" htmlFor="check-in">
-                Check-in
-              </label>
-              <input
-                id="check-in"
-                type="date"
-                value={checkInDate}
-                onChange={(e) => setCheckInDate(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-navy"
-              />
-            </div>
-            <div>
-              <label className="hotel-label" htmlFor="check-out">
-                Check-out
-              </label>
-              <input
-                id="check-out"
-                type="date"
-                value={checkOutDate}
-                onChange={(e) => setCheckOutDate(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-navy"
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <label className="hotel-label" htmlFor="source">
-                Source
-              </label>
-              <select
-                id="source"
-                value={source}
-                onChange={(e) => setSource(e.target.value as ReservationSource)}
-                className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-navy"
+          <div className="flex flex-wrap gap-2">
+            {[1, 2, 3, 7].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setNights(n)}
+                className={`hotel-btn ${nights === n ? "hotel-btn-gold" : "hotel-btn-secondary"}`}
               >
-                {(Object.keys(reservationSourceLabels) as ReservationSource[]).map((key) => (
-                  <option key={key} value={key}>
-                    {reservationSourceLabels[key]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="hotel-label" htmlFor="rate">
-                Nightly rate
-              </label>
-              <input
-                id="rate"
-                type="number"
-                min={0}
-                step={1}
-                value={nightlyRate}
-                onChange={(e) => setNightlyRate(Number(e.target.value))}
-                className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-navy"
-              />
-            </div>
+                {n} night{n > 1 ? "s" : ""}
+              </button>
+            ))}
           </div>
 
-          <p className="rounded-lg bg-cream px-3 py-2 text-sm text-muted">
-            {nights} night{nights > 1 ? "s" : ""} · Room charge{" "}
-            <strong className="text-navy">{formatMoney(nightlyRate * nights)}</strong>
-            {mode === "check_in" ? " (posted to folio on check-in)" : ""}
+          <p className="rounded-lg bg-cream px-3 py-2.5 text-sm text-navy">
+            Out <strong>{checkOutDate}</strong> ·{" "}
+            <strong>{formatMoney(nightlyRate * nights)}</strong> room charge
+            <span className="text-muted"> · {formatMoney(nightlyRate)}/night</span>
           </p>
+
+          <button
+            type="button"
+            onClick={() => setShowMore((v) => !v)}
+            className="text-sm font-semibold text-gold underline-offset-2 hover:underline"
+          >
+            {showMore ? "Hide extra details" : "More details (email, source, rate)"}
+          </button>
+
+          {showMore && (
+            <div className="space-y-3 rounded-xl border border-border bg-cream/50 p-3">
+              <div>
+                <label className="hotel-label" htmlFor="guest-email">
+                  Email
+                </label>
+                <input
+                  id="guest-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-navy"
+                  placeholder="optional"
+                />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="hotel-label" htmlFor="check-in">
+                    Check-in date
+                  </label>
+                  <input
+                    id="check-in"
+                    type="date"
+                    value={checkInDate}
+                    onChange={(e) => setCheckInDate(e.target.value || todayIso())}
+                    className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-navy"
+                  />
+                </div>
+                <div>
+                  <label className="hotel-label" htmlFor="source">
+                    How they booked
+                  </label>
+                  <select
+                    id="source"
+                    value={source}
+                    onChange={(e) => setSource(e.target.value as ReservationSource)}
+                    className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-navy"
+                  >
+                    {(Object.keys(reservationSourceLabels) as ReservationSource[]).map((key) => (
+                      <option key={key} value={key}>
+                        {reservationSourceLabels[key]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="hotel-label" htmlFor="rate">
+                  Nightly rate (₱)
+                </label>
+                <input
+                  id="rate"
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={nightlyRate}
+                  onChange={(e) => setNightlyRate(Number(e.target.value))}
+                  className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-navy"
+                />
+              </div>
+            </div>
+          )}
 
           {error && <p className="hotel-alert hotel-alert-error">{error}</p>}
 
@@ -221,8 +260,8 @@ export function CheckInModal({
             <button type="button" onClick={onClose} className="hotel-btn hotel-btn-secondary">
               Cancel
             </button>
-            <button type="submit" className="hotel-btn hotel-btn-gold">
-              {mode === "book" ? "Create booking" : "Confirm check-in"}
+            <button type="submit" className="hotel-btn hotel-btn-gold min-h-12">
+              {mode === "book" ? "Save booking" : "Check in now"}
             </button>
           </div>
         </form>

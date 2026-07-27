@@ -4,8 +4,8 @@ import { ReservationsPanel } from "@/components/ReservationsPanel";
 export default function ReservationsPage() {
   return (
     <OperationsPageLayout
-      title="Reservations"
-      subtitle="Bookings with guest details, stay dates, and source. Walk-ins and OTAs land here; check-in opens a folio automatically."
+      title="Bookings"
+      subtitle="Future stays and walk-in bookings. Day-to-day check-in still happens on Front Desk."
     >
       <ReservationsPanel />
     </OperationsPageLayout>

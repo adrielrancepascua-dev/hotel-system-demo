@@ -1,34 +1,35 @@
 "use client";
 
-import { staffRoleLabels } from "@/lib/constants";
-import { useActiveStaff, useDemoStore } from "@/lib/store/DemoStore";
+import { useDemoStore } from "@/lib/store/DemoStore";
 
+/** Only people who actually sit at the desk — HK doesn't use this system */
 export function StaffShiftPicker({ className = "" }: { className?: string }) {
   const { state, setActiveStaff } = useDemoStore();
-  const active = useActiveStaff();
+  const deskStaff = state.staff.filter(
+    (s) => s.role === "frontdesk" || s.role === "manager",
+  );
+  const value =
+    deskStaff.some((s) => s.id === state.activeStaffId)
+      ? state.activeStaffId
+      : (deskStaff[0]?.id ?? "");
 
   return (
     <label className={`flex items-center gap-2 text-sm ${className}`}>
       <span className="hidden whitespace-nowrap text-xs font-semibold uppercase tracking-wider text-muted lg:inline">
-        On shift
+        At desk
       </span>
       <select
-        value={state.activeStaffId ?? ""}
+        value={value ?? ""}
         onChange={(e) => setActiveStaff(Number(e.target.value))}
-        className="min-h-10 max-w-[11rem] rounded-lg border border-border bg-surface px-2 py-1.5 text-sm font-medium text-navy focus:outline-none focus:ring-2 focus:ring-gold/50 sm:max-w-none"
-        aria-label="Staff on shift"
+        className="min-h-10 max-w-[12rem] rounded-lg border border-border bg-surface px-2 py-1.5 text-sm font-medium text-navy focus:outline-none focus:ring-2 focus:ring-gold/50 sm:max-w-none"
+        aria-label="Who is at the front desk"
       >
-        {state.staff.map((member) => (
+        {deskStaff.map((member) => (
           <option key={member.id} value={member.id}>
-            {member.name} · {staffRoleLabels[member.role]}
+            {member.name}
           </option>
         ))}
       </select>
-      {active && (
-        <span className="sr-only">
-          Currently on shift: {active.name}, {staffRoleLabels[active.role]}
-        </span>
-      )}
     </label>
   );
 }

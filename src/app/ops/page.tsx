@@ -1,24 +1,13 @@
 import { OperationsPageLayout } from "@/components/OperationsPageLayout";
 import { UnifiedOpsBoard } from "@/components/UnifiedOpsBoard";
-import type { OpsFilter } from "@/lib/types";
 
-export default async function OpsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ filter?: string }>;
-}) {
-  const params = await searchParams;
-  const filter =
-    params.filter === "frontdesk" || params.filter === "housekeeping"
-      ? (params.filter as OpsFilter)
-      : "all";
-
+export default function OpsPage() {
   return (
     <OperationsPageLayout
-      title="Operations Console"
-      subtitle="One board for every room action."
+      title="Front Desk"
+      subtitle="Your notebook for the shift — check guests in and out, log charges, and update room status after you radio housekeeping."
     >
-      <UnifiedOpsBoard initialFilter={filter} />
+      <UnifiedOpsBoard />
     </OperationsPageLayout>
   );
 }

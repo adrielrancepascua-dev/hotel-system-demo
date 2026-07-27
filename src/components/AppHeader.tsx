@@ -10,11 +10,9 @@ import { StaffShiftPicker } from "@/components/StaffShiftPicker";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const links = [
-  { href: "/ops", label: "Ops" },
-  { href: "/reservations", label: "Reservations" },
-  { href: "/billing", label: "Billing" },
+  { href: "/ops", label: "Front Desk" },
+  { href: "/reservations", label: "Bookings" },
   { href: "/reports", label: "Reports" },
-  { href: "/requests", label: "Requests" },
   { href: "/room/108", label: "Guest QR" },
 ];
 
@@ -34,14 +32,17 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface-elevated/90 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3.5">
-        <Link href="/" className="group flex min-w-0 items-center gap-2 transition-opacity hover:opacity-90 sm:gap-3">
+        <Link
+          href="/ops"
+          className="group flex min-w-0 items-center gap-2 transition-opacity hover:opacity-90 sm:gap-3"
+        >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy-deep text-gold shadow-sm sm:h-10 sm:w-10">
             <HotelIcon className="h-5 w-5" />
           </div>
           <div className="min-w-0">
             <p className="hotel-label text-gold">Demo Hotel</p>
             <h1 className="font-display truncate text-base font-semibold leading-tight text-navy sm:text-lg md:text-xl">
-              Operations Suite
+              Front Desk
             </h1>
           </div>
         </Link>
@@ -77,7 +78,7 @@ export function AppHeader() {
         aria-label="Mobile primary"
         className={`${isMenuOpen ? "block" : "hidden"} border-t border-border px-3 py-3 sm:px-4 lg:hidden`}
       >
-        <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-2 sm:grid-cols-3">
+        <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-2">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -89,7 +90,7 @@ export function AppHeader() {
               {link.label}
             </Link>
           ))}
-          <div className="col-span-2 flex flex-col gap-2 sm:col-span-3 sm:flex-row">
+          <div className="col-span-2 flex flex-col gap-2 sm:flex-row">
             <StaffShiftPicker className="w-full flex-1 justify-between rounded-lg border border-border px-3 py-2" />
             <ThemeToggle className="w-full justify-center sm:w-auto" />
           </div>

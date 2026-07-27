@@ -1,55 +1,33 @@
 # Demo Hotel Operations Suite
 
-Philippine hotel management demo built with Next.js App Router, TypeScript, TailwindCSS, and optional Supabase. Amounts are in **PHP (₱)**.
+Philippine small-hotel front desk demo. Amounts in **PHP (₱)**.
 
-## Features
+Built for **one person at the reception desk** — not for housekeeping on a tablet. HK still gets told by radio / Messenger; the desk updates room status afterward so the board matches reality.
 
-- **Unified Operations console** — check-in, checkout, cleaning, and maintenance on one board (status-driven actions, no role-tab hopping)
-- **Reservations** — guest name/contact, stay dates, source (walk-in / Agoda·Booking / phone)
-- **Room types & rates** — Standard ₱2,500 · Deluxe ₱3,800 · Suite ₱5,500 per night
-- **Billing / folios** — room charges, incidentals, GCash / Maya / card / cash payments, receipts
-- **Staff shift picker** — attributes who completed cleaning and guest requests
-- **Owner reports** — occupancy, ADR, RevPAR, revenue today/MTD
-- **Guest QR concierge** — bill view, digital checkout, notes + photo attachments
-- Demo mode persists in `localStorage` (no Supabase required)
+## How a real shift uses it
+
+1. **Check in** — tap a Ready room → guest name + nights (phone optional).
+2. **During stay** — add charges (towels, late fee, minibar) on the folio from the same room panel.
+3. **Check out** — collect GCash/Maya/cash/card → room flips to **Dirty**. Radio HK.
+4. **When HK says done** — tap **Ready to sell**. No HK login required.
+5. **Shift handover** — Leaving today, unpaid balances, and dirty rooms are at the top of Front Desk.
 
 ## Routes
 
-| Route | Purpose |
-|-------|---------|
-| `/ops` | Unified operations board |
-| `/reservations` | Bookings list & create |
-| `/billing` | Folios, charges, payments |
-| `/billing/[id]` | Receipt / print view |
-| `/reports` | Owner metrics |
-| `/requests` | Staff request feed |
-| `/room/[roomNumber]` | Guest mobile concierge |
-| `/frontdesk`, `/housekeeping`, `/dashboard` | Redirect into `/ops` with filters |
+| Route | Who |
+|-------|-----|
+| `/ops` | Front desk home (default) |
+| `/reservations` | Future bookings |
+| `/reports` | Owner glance (ADR / RevPAR) |
+| `/billing/[id]` | Full receipt if needed |
+| `/room/[n]` | Guest QR demo |
+| `/requests` | Optional guest asks list |
 
-## Run locally
+## Run
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
-
-## Supabase (optional)
-
-1. Run `supabase/schema.sql` in the SQL editor.
-2. Copy env vars:
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-```
-
-Without env vars, the app uses the in-browser DemoStore.
-
-## Demo tips
-
-1. Set **On shift** staff in the header.
-2. Open **Ops** → select a Ready room → **Check In Guest**.
-3. Open **Billing** to take payment; open **Reports** to see ADR / RevPAR move.
-4. Visit `/room/108` as the guest to view the bill and send photo requests.
+Open `http://localhost:3000` → redirects to Front Desk.

@@ -23,7 +23,8 @@ import type {
   RoomStatus,
 } from "@/lib/types";
 
-const STORAGE_KEY = "demo-hotel-ph-state-v1";
+const STORAGE_KEY = "demo-hotel-ph-state-v2";
+const MAX_PHOTO_CHARS = 120_000;
 
 type DemoStoreValue = {
   state: HotelState;
@@ -34,6 +35,7 @@ type DemoStoreValue = {
   checkOutGuest: (roomId: number, closeFolio: boolean) => void;
   createReservation: (input: CheckInInput & { status?: "booked" | "checked_in" }) => number | null;
   activateBookedReservation: (reservationId: number) => boolean;
+  cancelReservation: (reservationId: number) => boolean;
   addCharge: (
     folioId: number,
     description: string,
@@ -58,21 +60,69 @@ function nextId(items: Array<{ id: number }>): number {
   return items.reduce((max, item) => Math.max(max, item.id), 0) + 1;
 }
 
+function hasBookedHold(roomId: number, reservations: HotelState["reservations"]): boolean {
+  return reservations.some((r) => r.room_id === roomId && r.status === "booked");
+}
+
+function sanitizeStateForStorage(state: HotelState): HotelState {
+  return {
+    ...state,
+    requests: state.requests.map((r) => ({
+      ...r,
+      photo_url:
+        r.photo_url && r.photo_url.length > MAX_PHOTO_CHARS ? null : r.photo_url,
+    })),
+  };
+}
+
+function persistState(state: HotelState) {
+  try {
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(sanitizeStateForStorage(state)),
+    );
+  } catch {
+    try {
+      const stripped = {
+        ...state,
+        requests: state.requests.map((r) => ({ ...r, photo_url: null })),
+      };
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stripped));
+    } catch {
+      // Quota full — keep working in memory only.
+    }
+  }
+}
+
 function loadState(): HotelState {
   if (typeof window === "undefined") {
     return buildInitialHotelState();
   }
 
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw =
+      window.localStorage.getItem(STORAGE_KEY) ??
+      window.localStorage.getItem("demo-hotel-ph-state-v1");
     if (!raw) {
       return buildInitialHotelState();
     }
     const parsed = JSON.parse(raw) as HotelState;
-    if (!parsed.rooms?.length || !parsed.roomTypes?.length) {
+    if (!parsed.rooms?.length || !parsed.roomTypes?.length || !parsed.staff?.length) {
       return buildInitialHotelState();
     }
-    return parsed;
+    return {
+      ...parsed,
+      rooms: parsed.rooms,
+      roomTypes: parsed.roomTypes,
+      staff: parsed.staff,
+      reservations: parsed.reservations ?? [],
+      folios: parsed.folios ?? [],
+      charges: parsed.charges ?? [],
+      payments: parsed.payments ?? [],
+      requests: parsed.requests ?? [],
+      statusEvents: parsed.statusEvents ?? [],
+      activeStaffId: parsed.activeStaffId ?? parsed.staff[0]?.id ?? 1,
+    };
   } catch {
     return buildInitialHotelState();
   }
@@ -89,7 +139,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    persistState(state);
   }, [hydrated, state]);
 
   const setActiveStaff = useCallback((staffId: number) => {
@@ -130,7 +180,10 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
 
       setState((prev) => {
         const room = prev.rooms.find((r) => r.id === input.roomId);
-        if (!room || (room.status !== "ready" && room.status !== "maintenance")) {
+        if (!room || room.status !== "ready") {
+          return prev;
+        }
+        if (hasBookedHold(input.roomId, prev.reservations)) {
           return prev;
         }
 
@@ -219,6 +272,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       setState((prev) => {
         const room = prev.rooms.find((r) => r.id === input.roomId);
         if (!room || room.status !== "ready") return prev;
+        if (hasBookedHold(input.roomId, prev.reservations)) return prev;
 
         const roomType = prev.roomTypes.find((t) => t.id === room.room_type_id);
         const nightlyRate = input.nightlyRate ?? roomType?.base_rate ?? 0;
@@ -358,6 +412,22 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     return ok;
   }, []);
 
+  const cancelReservation = useCallback((reservationId: number) => {
+    let ok = false;
+    setState((prev) => {
+      const reservation = prev.reservations.find((r) => r.id === reservationId);
+      if (!reservation || reservation.status !== "booked") return prev;
+      ok = true;
+      return {
+        ...prev,
+        reservations: prev.reservations.map((r) =>
+          r.id === reservationId ? { ...r, status: "cancelled" as const } : r,
+        ),
+      };
+    });
+    return ok;
+  }, []);
+
   const addCharge = useCallback(
     (folioId: number, description: string, amount: number, category: ChargeCategory) => {
       setState((prev) => {
@@ -425,6 +495,11 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       notes?: string | null;
       photoUrl?: string | null;
     }) => {
+      const photo =
+        input.photoUrl && input.photoUrl.length > MAX_PHOTO_CHARS
+          ? null
+          : (input.photoUrl ?? null);
+
       setState((prev) => ({
         ...prev,
         requests: [
@@ -435,7 +510,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
             status: "pending",
             created_at: new Date().toISOString(),
             notes: input.notes ?? null,
-            photo_url: input.photoUrl ?? null,
+            photo_url: photo,
             completed_by_staff_id: null,
             completed_at: null,
           },
@@ -465,7 +540,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const resetDemo = useCallback(() => {
     const fresh = buildInitialHotelState();
     setState(fresh);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
+    persistState(fresh);
   }, []);
 
   const value = useMemo<DemoStoreValue>(
@@ -478,6 +553,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       checkOutGuest,
       createReservation,
       activateBookedReservation,
+      cancelReservation,
       addCharge,
       addPayment,
       closeFolio,
@@ -494,6 +570,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       checkOutGuest,
       createReservation,
       activateBookedReservation,
+      cancelReservation,
       addCharge,
       addPayment,
       closeFolio,

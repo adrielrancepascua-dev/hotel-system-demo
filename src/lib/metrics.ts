@@ -150,9 +150,17 @@ export function getActiveReservation(
   roomId: number,
   reservations: ReservationRecord[],
 ): ReservationRecord | undefined {
-  return reservations.find(
-    (r) => r.room_id === roomId && (r.status === "checked_in" || r.status === "booked"),
+  return (
+    reservations.find((r) => r.room_id === roomId && r.status === "checked_in") ??
+    reservations.find((r) => r.room_id === roomId && r.status === "booked")
   );
+}
+
+export function getBookedReservation(
+  roomId: number,
+  reservations: ReservationRecord[],
+): ReservationRecord | undefined {
+  return reservations.find((r) => r.room_id === roomId && r.status === "booked");
 }
 
 export function getFolioForReservation(

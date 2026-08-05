@@ -429,3 +429,14 @@ html[data-theme="dark"] body {
     border: 1px solid rgba(184, 149, 106, 0.25);
   }
 }
+
+@media print {
+  .hotel-page {
+    background: white !important;
+  }
+
+  header,
+  .print\:hidden {
+    display: none !important;
+  }
+}

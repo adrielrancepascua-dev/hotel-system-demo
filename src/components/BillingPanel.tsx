@@ -241,7 +241,17 @@ export function BillingPanel() {
                 <button
                   type="button"
                   className="hotel-btn hotel-btn-secondary"
-                  onClick={() => closeFolio(selected.id)}
+                  onClick={() => {
+                    if (
+                      balance > 0 &&
+                      !window.confirm(
+                        `This bill still has ${formatMoney(balance)} unpaid. Close it anyway?`,
+                      )
+                    ) {
+                      return;
+                    }
+                    closeFolio(selected.id);
+                  }}
                 >
                   Close bill
                 </button>

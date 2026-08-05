@@ -10,27 +10,39 @@ import { StaffShiftPicker } from "@/components/StaffShiftPicker";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const links = [
-  { href: "/ops", label: "Front Desk" },
-  { href: "/reservations", label: "Bookings" },
-  { href: "/reports", label: "Reports" },
-  { href: "/room/108", label: "Guest QR" },
+  { href: "/ops", label: "Front Desk", matchTitle: "Front Desk" },
+  { href: "/reservations", label: "Bookings", matchTitle: "Bookings" },
+  { href: "/billing", label: "Bills", matchTitle: "Bills" },
+  { href: "/requests", label: "Requests", matchTitle: "Requests" },
+  { href: "/reports", label: "Reports", matchTitle: "Reports" },
+  { href: "/room/108", label: "Guest QR", matchTitle: "Guest QR" },
 ];
+
+function titleForPath(pathname: string): string {
+  if (pathname.startsWith("/reservations")) return "Bookings";
+  if (pathname.startsWith("/billing")) return "Bills";
+  if (pathname.startsWith("/requests")) return "Requests";
+  if (pathname.startsWith("/reports")) return "Reports";
+  if (pathname.startsWith("/room/")) return "Guest QR";
+  return "Front Desk";
+}
 
 export function AppHeader() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pageTitle = titleForPath(pathname);
 
   useEffect(() => {
     setIsMenuOpen(false);
   }, [pathname]);
 
   function isActive(href: string) {
-    if (href === "/") return pathname === "/";
+    if (href === "/ops") return pathname === "/ops" || pathname === "/";
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-surface-elevated/90 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border bg-surface-elevated/90 print:hidden backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3.5">
         <Link
           href="/ops"
@@ -42,7 +54,7 @@ export function AppHeader() {
           <div className="min-w-0">
             <p className="hotel-label text-gold">Demo Hotel</p>
             <h1 className="font-display truncate text-lg font-semibold leading-tight text-navy sm:text-lg md:text-xl">
-              Front Desk
+              {pageTitle}
             </h1>
           </div>
         </Link>

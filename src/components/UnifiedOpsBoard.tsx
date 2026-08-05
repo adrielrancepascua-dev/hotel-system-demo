@@ -13,6 +13,7 @@ import { formatMoney } from "@/lib/demo";
 import {
   folioBalance,
   getActiveReservation,
+  getBookedReservation,
   getFolioForReservation,
   getRoomType,
 } from "@/lib/metrics";
@@ -43,6 +44,8 @@ export function UnifiedOpsBoard() {
     addPayment,
     closeFolio,
     completeRequest,
+    activateBookedReservation,
+    cancelReservation,
   } = useDemoStore();
 
   const [filter, setFilter] = useState<DeskFilter>("all");
@@ -103,6 +106,9 @@ export function UnifiedOpsBoard() {
     : undefined;
   const activeReservation = selectedRoom
     ? getActiveReservation(selectedRoom.id, state.reservations)
+    : undefined;
+  const bookedHold = selectedRoom
+    ? getBookedReservation(selectedRoom.id, state.reservations)
     : undefined;
   const activeFolio = activeReservation
     ? getFolioForReservation(activeReservation.id, state.folios)
@@ -197,7 +203,7 @@ export function UnifiedOpsBoard() {
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-6 sm:py-5">
       {toast && (
-        <div className="hotel-alert hotel-alert-success sticky top-[3.75rem] z-30 shadow-md sm:top-20">
+        <div className="hotel-alert hotel-alert-success sticky top-[3.75rem] z-30 shadow-md sm:top-20" role="status" aria-live="polite">
           {toast}
         </div>
       )}
@@ -366,7 +372,7 @@ export function UnifiedOpsBoard() {
                 {selectedType ? ` · ${selectedType.name}` : ""}
               </p>
 
-              {activeReservation && (
+              {activeReservation?.status === "checked_in" && (
                 <div className="mt-3 rounded-lg bg-cream px-3 py-2 text-sm">
                   <p className="font-semibold text-navy">{activeReservation.guest_name}</p>
                   <p className="truncate text-muted">
@@ -387,13 +393,48 @@ export function UnifiedOpsBoard() {
               <div className="space-y-2">
                 {selectedRoom.status === "ready" && (
                   <>
-                    <button
-                      type="button"
-                      className="staff-mode-action staff-mode-action-primary"
-                      onClick={() => setShowCheckIn(true)}
-                    >
-                      Check in guest
-                    </button>
+                    {bookedHold ? (
+                      <>
+                        <p className="rounded-lg bg-cream px-3 py-2 text-sm text-navy">
+                          Held for <strong>{bookedHold.guest_name}</strong> · arrive{" "}
+                          {bookedHold.check_in_date}
+                        </p>
+                        <button
+                          type="button"
+                          className="staff-mode-action staff-mode-action-primary"
+                          onClick={() => {
+                            const ok = activateBookedReservation(bookedHold.id);
+                            flash(
+                              ok
+                                ? `Checked in · Room ${selectedRoom.room_number}`
+                                : "Could not check in — room must be Ready",
+                            );
+                            if (ok) clearRoomPanel();
+                          }}
+                        >
+                          Check in held guest
+                        </button>
+                        <button
+                          type="button"
+                          className="staff-mode-action staff-mode-action-secondary"
+                          onClick={() => {
+                            cancelReservation(bookedHold.id);
+                            flash(`Booking cancelled · Room ${selectedRoom.room_number}`);
+                            clearRoomPanel();
+                          }}
+                        >
+                          Cancel booking
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        className="staff-mode-action staff-mode-action-primary"
+                        onClick={() => setShowCheckIn(true)}
+                      >
+                        Check in guest
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="staff-mode-action staff-mode-action-secondary"
@@ -690,17 +731,24 @@ export function UnifiedOpsBoard() {
             roomSelected ? "hidden lg:grid" : ""
           }`}
         >
-          {rooms.map((room) => {
+          {rooms.length === 0 ? (
+            <div className="col-span-full hotel-card py-10 text-center">
+              <p className="font-display text-lg text-navy">No rooms in this filter</p>
+              <p className="mt-1 text-sm text-muted">Tap All to see every room again.</p>
+            </div>
+          ) : (
+          rooms.map((room) => {
             const theme = roomStatusStyles[room.status];
             const type = getRoomType(room, state.roomTypes);
             const reservation = getActiveReservation(room.id, state.reservations);
             const isSelected = room.id === selectedRoomId;
-            const folio = reservation
+            const folio = reservation?.status === "checked_in"
               ? getFolioForReservation(reservation.id, state.folios)
               : undefined;
             const due = folio
               ? folioBalance(folio.id, state.charges, state.payments)
               : 0;
+            const held = reservation?.status === "booked";
 
             return (
               <button
@@ -713,7 +761,7 @@ export function UnifiedOpsBoard() {
                   setShowCharge(false);
                 }}
                 aria-pressed={isSelected}
-                aria-label={`Room ${room.room_number}, ${theme.label}`}
+                aria-label={`Room ${room.room_number}, ${held ? "Held" : theme.label}`}
                 className={`staff-mode-card min-h-24 w-full rounded-xl border p-2.5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 sm:min-h-32 sm:p-4 ${theme.card} ${
                   isSelected ? "ring-2 ring-gold/60 shadow-md" : ""
                 }`}
@@ -728,20 +776,25 @@ export function UnifiedOpsBoard() {
                   {room.room_number}
                 </p>
                 <span
-                  className={`staff-mode-badge mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[0.625rem] sm:mt-2 sm:px-2.5 sm:text-xs ${theme.badge}`}
+                  className={`staff-mode-badge mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[0.625rem] sm:mt-2 sm:px-2.5 sm:text-xs ${
+                    held
+                      ? "bg-navy-deep/90 text-white dark:bg-gold/20 dark:text-gold-light"
+                      : theme.badge
+                  }`}
                 >
-                  {theme.shortLabel}
+                  {held ? "Held" : theme.shortLabel}
                 </span>
                 <p className="mt-1.5 truncate text-[0.6875rem] text-muted sm:mt-2 sm:text-xs">
                   {reservation
-                    ? `${reservation.guest_name}${due > 0 ? ` · ${formatMoney(due)}` : ""}`
+                    ? `${held ? "Hold · " : ""}${reservation.guest_name}${due > 0 ? ` · ${formatMoney(due)}` : ""}`
                     : room.status === "ready"
                       ? `Sell @ ${formatMoney(type?.base_rate ?? 0)}`
                       : "—"}
                 </p>
               </button>
             );
-          })}
+          })
+          )}
         </div>
       </div>
 

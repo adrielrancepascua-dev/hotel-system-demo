@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { reservationSourceLabels } from "@/lib/constants";
 import { formatMoney } from "@/lib/demo";
@@ -45,6 +45,14 @@ export function CheckInModal({
     return start.toISOString().slice(0, 10);
   }, [checkInDate, nights]);
 
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -68,13 +76,13 @@ export function CheckInModal({
     if (mode === "book") {
       const id = createReservation({ ...input, status: "booked" });
       if (!id) {
-        setError("Room must be ready to book.");
+        setError("Room is not free to book (may already be held).");
         return;
       }
     } else {
       const result = checkInGuest(input);
       if (!result) {
-        setError("Room must be ready to check in.");
+        setError("Room must be Ready and not held for another guest.");
         return;
       }
     }
@@ -89,8 +97,12 @@ export function CheckInModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="checkin-title"
+      onClick={onClose}
     >
-      <div className="hotel-card hotel-card-accent max-h-[92vh] w-full max-w-md overflow-y-auto p-5 sm:p-6">
+      <div
+        className="hotel-card hotel-card-accent max-h-[92vh] w-full max-w-md overflow-y-auto p-5 sm:p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
         <p className="hotel-label text-gold">Room {roomNumber}</p>
         <h2 id="checkin-title" className="font-display mt-1 text-2xl font-semibold text-navy">
           {mode === "book" ? "New booking" : "Quick check-in"}

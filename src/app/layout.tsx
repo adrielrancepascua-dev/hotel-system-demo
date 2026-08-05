@@ -21,9 +21,9 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "Demo Hotel | Operations Suite",
+  title: "Demo Hotel | Front Desk",
   description:
-    "Elegant hotel operations platform with real-time room management, guest concierge, and staff coordination.",
+    "Front desk hotel operations — rooms, check-in, bills, and guest requests. Sample Philippine hotel data; works offline in your browser.",
 };
 
 export default function RootLayout({
@@ -33,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="en-PH"
       className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

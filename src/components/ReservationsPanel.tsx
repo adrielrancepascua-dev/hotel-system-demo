@@ -23,12 +23,16 @@ const statusFilters: Array<{ key: ReservationStatus | "all"; label: string }> = 
 ];
 
 export function ReservationsPanel() {
-  const { state, hydrated, activateBookedReservation } = useDemoStore();
+  const { state, hydrated, activateBookedReservation, cancelReservation } = useDemoStore();
   const [filter, setFilter] = useState<ReservationStatus | "all">("all");
   const [pickingRoom, setPickingRoom] = useState(false);
   const [bookingRoomId, setBookingRoomId] = useState<number | null>(null);
 
-  const readyRooms = state.rooms.filter((r) => r.status === "ready");
+  const readyRooms = state.rooms.filter(
+    (r) =>
+      r.status === "ready" &&
+      !state.reservations.some((res) => res.room_id === r.id && res.status === "booked"),
+  );
   const bookingRoom = state.rooms.find((r) => r.id === bookingRoomId);
   const bookingType = bookingRoom
     ? getRoomType(bookingRoom, state.roomTypes)
@@ -173,13 +177,22 @@ export function ReservationsPanel() {
                   </p>
                 )}
                 {reservation.status === "booked" && room?.status === "ready" && (
-                  <button
-                    type="button"
-                    className="hotel-btn hotel-btn-primary mt-4 w-full sm:w-auto"
-                    onClick={() => activateBookedReservation(reservation.id)}
-                  >
-                    Check in now
-                  </button>
+                  <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                    <button
+                      type="button"
+                      className="hotel-btn hotel-btn-primary w-full sm:w-auto"
+                      onClick={() => activateBookedReservation(reservation.id)}
+                    >
+                      Check in now
+                    </button>
+                    <button
+                      type="button"
+                      className="hotel-btn hotel-btn-secondary w-full sm:w-auto"
+                      onClick={() => cancelReservation(reservation.id)}
+                    >
+                      Cancel booking
+                    </button>
+                  </div>
                 )}
               </article>
             );

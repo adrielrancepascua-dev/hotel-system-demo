@@ -131,8 +131,20 @@ export function ReportsPanel() {
             );
           })}
         </ul>
-        <button type="button" onClick={resetDemo} className="hotel-btn hotel-btn-secondary mt-4">
-          Reset demo data
+        <button
+          type="button"
+          onClick={() => {
+            if (
+              window.confirm(
+                "Reset all rooms, guests, bills, and requests back to the sample hotel data?",
+              )
+            ) {
+              resetDemo();
+            }
+          }}
+          className="hotel-btn hotel-btn-secondary mt-4"
+        >
+          Reset sample data
         </button>
       </div>
     </section>

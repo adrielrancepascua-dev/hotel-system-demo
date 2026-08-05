@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { ConciergeIcon, HotelIcon } from "@/components/icons";
-import { paymentMethodLabels, requestTypeLabels, roomStatusStyles } from "@/lib/constants";
+import { paymentMethodLabels, requestTypeLabels } from "@/lib/constants";
 import { formatMoney } from "@/lib/demo";
 import {
   folioBalance,
@@ -14,12 +14,11 @@ import { useDemoStore } from "@/lib/store/DemoStore";
 import type { RequestType } from "@/lib/types";
 
 const requestButtons: Array<{ type: RequestType; label: string; emoji: string }> = [
-  { type: "towels", label: "Request Towels", emoji: "🛁" },
-  { type: "housekeeping", label: "Request Housekeeping", emoji: "✨" },
-  { type: "late_checkout", label: "Late Checkout", emoji: "🕐" },
-  { type: "food", label: "Order Food", emoji: "🍽️" },
-  { type: "digital_checkout", label: "Request Checkout", emoji: "🚪" },
-  { type: "hotel_services", label: "Hotel Services", emoji: "🏨" },
+  { type: "towels", label: "Extra towels", emoji: "🛁" },
+  { type: "housekeeping", label: "Room tidy-up", emoji: "✨" },
+  { type: "late_checkout", label: "Late checkout", emoji: "🕐" },
+  { type: "food", label: "Order food", emoji: "🍽️" },
+  { type: "digital_checkout", label: "Request checkout", emoji: "🚪" },
 ];
 
 const hotelServices = [
@@ -38,6 +37,7 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [showBill, setShowBill] = useState(false);
   const [selectedType, setSelectedType] = useState<RequestType | null>(null);
+  const [showServices, setShowServices] = useState(false);
 
   const room = state.rooms.find((r) => r.room_number === roomNumber);
   const reservation = room
@@ -63,11 +63,19 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
     [state.requests, roomNumber],
   );
 
-  const statusTheme = room ? roomStatusStyles[room.status] : null;
+  useEffect(() => {
+    if (!message) return;
+    const t = window.setTimeout(() => setMessage(null), 4500);
+    return () => window.clearTimeout(t);
+  }, [message]);
 
   function handlePhotoChange(file: File | null) {
     if (!file) {
       setPhotoUrl(null);
+      return;
+    }
+    if (file.size > 800_000) {
+      setMessage("Photo too large. Please pick a smaller picture.");
       return;
     }
     const reader = new FileReader();
@@ -88,7 +96,7 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
       photoUrl,
     });
 
-    setMessage(`${requestTypeLabels[type]} has been sent to staff.`);
+    setMessage(`${requestTypeLabels[type]} sent to the front desk.`);
     setNotes("");
     setPhotoUrl(null);
     setSelectedType(null);
@@ -98,7 +106,20 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
   if (!hydrated) {
     return (
       <div className="hotel-page flex min-h-screen items-center justify-center">
-        <p className="text-sm text-muted">Loading concierge…</p>
+        <p className="text-sm text-muted">Loading…</p>
+      </div>
+    );
+  }
+
+  if (!room) {
+    return (
+      <div className="hotel-page flex min-h-screen items-center justify-center px-4">
+        <div className="hotel-card max-w-sm p-6 text-center">
+          <p className="font-display text-2xl font-semibold text-navy">Room not found</p>
+          <p className="mt-2 text-sm text-muted">
+            Ask the front desk for the correct room link or QR code.
+          </p>
+        </div>
       </div>
     );
   }
@@ -107,9 +128,9 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
     <div className="hotel-page">
       <main
         id="main-content"
-        className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-5 px-4 py-6 pb-40"
+        className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4 px-4 py-5 pb-8 sm:py-6"
       >
-        <header className="hotel-hero px-5 py-7">
+        <header className="hotel-hero px-5 py-6 sm:py-7">
           <div className="relative z-10">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-gold backdrop-blur">
@@ -117,27 +138,25 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
               </div>
               <div>
                 <p className="hotel-label text-gold-light">Demo Hotel</p>
-                <p className="text-sm text-slate-300">Room Concierge</p>
+                <p className="text-sm text-slate-300">Guest services</p>
               </div>
             </div>
-            <h1 className="font-display mt-5 text-4xl font-semibold text-white">
+            <h1 className="font-display mt-4 text-3xl font-semibold text-white sm:mt-5 sm:text-4xl">
               Room {roomNumber}
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-slate-300">
               {reservation
-                ? `Welcome, ${reservation.guest_name}. Request services or view your bill.`
-                : "Tap a service below and your request will be delivered to our team."}
+                ? `Welcome, ${reservation.guest_name}. Ask for help or check your bill below.`
+                : "Welcome. Tap a service below to message the front desk."}
             </p>
-            {statusTheme && (
-              <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 backdrop-blur">
-                <span className={`h-2 w-2 rounded-full ${statusTheme.dot}`} />
-                <span className="text-xs font-medium text-slate-200">
-                  {statusTheme.label}
-                </span>
-              </div>
-            )}
           </div>
         </header>
+
+        {message && (
+          <p className="hotel-alert hotel-alert-success" role="status" aria-live="polite">
+            {message}
+          </p>
+        )}
 
         {folio && (
           <button
@@ -152,22 +171,22 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
               </p>
             </div>
             <span className="text-sm font-semibold text-gold">
-              {showBill ? "Hide" : "View"} →
+              {showBill ? "Hide" : "View"}
             </span>
           </button>
         )}
 
         {showBill && folio && (
-          <article className="hotel-card p-5">
-            <h2 className="hotel-label">Bill charges</h2>
+          <article className="hotel-card p-4 sm:p-5">
+            <h2 className="hotel-label">Charges</h2>
             <ul className="mt-3 space-y-2">
               {charges.map((charge) => (
                 <li
                   key={charge.id}
-                  className="flex justify-between rounded-lg border border-border bg-cream px-3 py-2 text-sm"
+                  className="flex justify-between gap-3 rounded-lg border border-border bg-cream px-3 py-2 text-sm"
                 >
-                  <span>{charge.description}</span>
-                  <span>{formatMoney(charge.amount)}</span>
+                  <span className="min-w-0 truncate">{charge.description}</span>
+                  <span className="shrink-0">{formatMoney(charge.amount)}</span>
                 </li>
               ))}
             </ul>
@@ -193,10 +212,10 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
           </article>
         )}
 
-        <section className="sticky bottom-3 z-20 hotel-card hotel-card-accent p-4 shadow-xl">
+        <section className="hotel-card hotel-card-accent p-4">
           <div className="flex items-center gap-2">
             <ConciergeIcon className="h-4 w-4 text-gold" />
-            <h2 className="hotel-label">Concierge Services</h2>
+            <h2 className="hotel-label">Ask the desk</h2>
           </div>
 
           {selectedType ? (
@@ -212,7 +231,7 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
                 className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-navy"
               />
               <label className="block text-sm text-muted">
-                Attach photo (optional)
+                Photo (optional)
                 <input
                   type="file"
                   accept="image/*"
@@ -225,7 +244,7 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={photoUrl}
-                  alt="Preview"
+                  alt="Attached preview"
                   className="max-h-32 rounded-lg border border-border object-cover"
                 />
               )}
@@ -246,12 +265,12 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
                   className="hotel-btn hotel-btn-gold flex-1 disabled:opacity-60"
                   onClick={() => submitRequest(selectedType)}
                 >
-                  Send request
+                  Send
                 </button>
               </div>
             </div>
           ) : (
-            <div className="mt-3 space-y-2">
+            <div className="mt-3 grid grid-cols-1 gap-2">
               {requestButtons.map((button) => (
                 <button
                   key={button.type}
@@ -265,54 +284,64 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
                   {button.label}
                 </button>
               ))}
+              <button
+                type="button"
+                onClick={() => setShowServices((v) => !v)}
+                className="staff-mode-action flex items-center gap-3 text-left staff-mode-action-secondary"
+              >
+                <span className="text-lg" aria-hidden="true">
+                  🏨
+                </span>
+                {showServices ? "Hide hotel info" : "Hotel info"}
+              </button>
             </div>
           )}
         </section>
 
-        {message && <p className="hotel-alert hotel-alert-success">{message}</p>}
+        {showServices && (
+          <article className="hotel-card p-4 sm:p-5">
+            <h2 className="hotel-label">Hotel info</h2>
+            <ul className="mt-3 space-y-2">
+              {hotelServices.map((service) => (
+                <li
+                  key={service.label}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border bg-cream px-3 py-2.5 text-sm"
+                >
+                  <span className="font-medium text-navy">{service.label}</span>
+                  <span className="shrink-0 text-xs text-muted">{service.hours}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+        )}
 
-        <article className="hotel-card p-5">
-          <h2 className="hotel-label">Recent Requests</h2>
+        <article className="hotel-card p-4 sm:p-5">
+          <h2 className="hotel-label">Your recent requests</h2>
           {recentRequests.length === 0 ? (
-            <p className="mt-3 text-sm text-muted">No recent requests from this room.</p>
+            <p className="mt-3 text-sm text-muted">Nothing sent yet from this room.</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {recentRequests.map((request) => (
                 <li
                   key={request.id}
-                  className="flex items-center justify-between rounded-lg border border-border bg-cream px-3 py-2.5 text-sm"
+                  className="flex items-center justify-between gap-2 rounded-lg border border-border bg-cream px-3 py-2.5 text-sm"
                 >
-                  <span className="text-navy">
+                  <span className="min-w-0 truncate text-navy">
                     {requestTypeLabels[request.request_type]}
                   </span>
                   <span
-                    className={`staff-mode-badge rounded-full px-2 py-0.5 text-[0.625rem] ${
+                    className={`staff-mode-badge shrink-0 rounded-full px-2 py-0.5 text-[0.625rem] ${
                       request.status === "pending"
                         ? "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-200"
                         : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200"
                     }`}
                   >
-                    {request.status}
+                    {request.status === "pending" ? "Sent" : "Done"}
                   </span>
                 </li>
               ))}
             </ul>
           )}
-        </article>
-
-        <article className="hotel-card p-5">
-          <h2 className="hotel-label">Hotel Services</h2>
-          <ul className="mt-3 space-y-2">
-            {hotelServices.map((service) => (
-              <li
-                key={service.label}
-                className="flex items-center justify-between rounded-lg border border-border bg-cream px-3 py-2.5 text-sm"
-              >
-                <span className="font-medium text-navy">{service.label}</span>
-                <span className="text-xs text-muted">{service.hours}</span>
-              </li>
-            ))}
-          </ul>
         </article>
       </main>
     </div>

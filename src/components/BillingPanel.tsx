@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 
+import { useToast } from "@/components/Toast";
 import { formatMoney } from "@/lib/demo";
 import { folioBalance } from "@/lib/metrics";
 import { useDemoStore } from "@/lib/store/DemoStore";
@@ -11,6 +12,7 @@ import { paymentMethodLabels } from "@/lib/constants";
 
 export function BillingPanel() {
   const { state, hydrated, addCharge, addPayment, closeFolio } = useDemoStore();
+  const { notify } = useToast();
   const [statusFilter, setStatusFilter] = useState<FolioStatus | "all">("open");
   const [selectedFolioId, setSelectedFolioId] = useState<number | null>(null);
   const [chargeDesc, setChargeDesc] = useState("Minibar / snacks");
@@ -47,16 +49,21 @@ export function BillingPanel() {
     : 0;
 
   if (!hydrated) {
-    return <p className="px-4 text-sm text-muted sm:px-6">Loading billing…</p>;
+    return <p className="px-4 text-sm text-muted sm:px-6">Loading bills…</p>;
   }
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1 sm:mb-5 sm:flex-wrap sm:overflow-visible sm:pb-0">
+    <section className="mx-auto w-full max-w-6xl px-3 py-3 sm:px-6 sm:py-5">
+      <div
+        role="group"
+        aria-label="Filter bills"
+        className="mb-4 flex gap-2 overflow-x-auto pb-1 sm:mb-5 sm:flex-wrap sm:overflow-visible sm:pb-0"
+      >
         {(["open", "closed", "all"] as const).map((key) => (
           <button
             key={key}
             type="button"
+            aria-pressed={statusFilter === key}
             onClick={() => setStatusFilter(key)}
             className={`hotel-btn shrink-0 ${statusFilter === key ? "hotel-btn-gold" : "hotel-btn-secondary"}`}
           >
@@ -87,7 +94,8 @@ export function BillingPanel() {
                 >
                   <p className="truncate font-medium text-navy">{res?.guest_name ?? "Guest"}</p>
                   <p className="text-xs text-muted">
-                    Bill #{folio.id} · {folio.status} · {formatMoney(bal)} due
+                    Bill #{folio.id} · {folio.status === "open" ? "Open" : "Closed"} ·{" "}
+                    {formatMoney(bal)} due
                   </p>
                 </button>
               );
@@ -160,7 +168,9 @@ export function BillingPanel() {
                   className="space-y-2 rounded-xl border border-border p-3"
                   onSubmit={(e) => {
                     e.preventDefault();
+                    if (chargeAmount <= 0) return;
                     addCharge(selected.id, chargeDesc, chargeAmount, chargeCategory);
+                    notify(`Added ${formatMoney(chargeAmount)} to bill #${selected.id}`);
                   }}
                 >
                   <p className="hotel-label">Add charge</p>
@@ -203,6 +213,9 @@ export function BillingPanel() {
                     if (amount <= 0) return;
                     addPayment(selected.id, amount, payMethod);
                     setPayAmount(0);
+                    notify(
+                      `${formatMoney(amount)} received · ${paymentMethodLabels[payMethod]}`,
+                    );
                   }}
                 >
                   <p className="hotel-label">Record payment</p>
@@ -251,6 +264,7 @@ export function BillingPanel() {
                       return;
                     }
                     closeFolio(selected.id);
+                    notify(`Bill #${selected.id} closed`);
                   }}
                 >
                   Close bill

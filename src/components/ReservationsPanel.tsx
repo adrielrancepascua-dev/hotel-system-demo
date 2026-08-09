@@ -4,13 +4,10 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 
 import { CheckInModal } from "@/components/CheckInModal";
-import { reservationSourceLabels } from "@/lib/constants";
+import { useToast } from "@/components/Toast";
+import { reservationSourceLabels, reservationStatusLabels } from "@/lib/constants";
 import { formatMoney } from "@/lib/demo";
-import {
-  folioBalance,
-  getFolioForReservation,
-  getRoomType,
-} from "@/lib/metrics";
+import { folioBalance, getFolioForReservation, getRoomType } from "@/lib/metrics";
 import { useDemoStore } from "@/lib/store/DemoStore";
 import type { ReservationStatus } from "@/lib/types";
 
@@ -24,7 +21,9 @@ const statusFilters: Array<{ key: ReservationStatus | "all"; label: string }> = 
 
 export function ReservationsPanel() {
   const { state, hydrated, activateBookedReservation, cancelReservation } = useDemoStore();
+  const { notify } = useToast();
   const [filter, setFilter] = useState<ReservationStatus | "all">("all");
+  const [query, setQuery] = useState("");
   const [pickingRoom, setPickingRoom] = useState(false);
   const [bookingRoomId, setBookingRoomId] = useState<number | null>(null);
 
@@ -34,32 +33,53 @@ export function ReservationsPanel() {
       !state.reservations.some((res) => res.room_id === r.id && res.status === "booked"),
   );
   const bookingRoom = state.rooms.find((r) => r.id === bookingRoomId);
-  const bookingType = bookingRoom
-    ? getRoomType(bookingRoom, state.roomTypes)
-    : undefined;
+  const bookingType = bookingRoom ? getRoomType(bookingRoom, state.roomTypes) : undefined;
 
   const reservations = useMemo(() => {
-    const list =
-      filter === "all"
-        ? state.reservations
-        : state.reservations.filter((r) => r.status === filter);
+    const search = query.trim().toLowerCase();
+    const list = state.reservations.filter((r) => {
+      if (filter !== "all" && r.status !== filter) return false;
+      if (!search) return true;
+      const room = state.rooms.find((x) => x.id === r.room_id);
+      return (
+        r.guest_name.toLowerCase().includes(search) ||
+        (room?.room_number ?? "").toLowerCase().includes(search)
+      );
+    });
     return [...list].sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
-  }, [state.reservations, filter]);
+  }, [state.reservations, state.rooms, filter, query]);
 
   if (!hydrated) {
     return <p className="px-4 text-sm text-muted sm:px-6">Loading bookings…</p>;
   }
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
+    <section className="mx-auto w-full max-w-6xl px-3 py-3 sm:px-6 sm:py-5">
       <div className="mb-4 flex flex-col gap-3 sm:mb-5">
-        <div className="-mx-3 flex gap-1.5 overflow-x-auto px-3 pb-0.5 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:gap-2 sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden">
+        <label htmlFor="booking-search" className="sr-only">
+          Search guest name or room number
+        </label>
+        <input
+          id="booking-search"
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search guest name or room number…"
+          className="hotel-input"
+        />
+
+        <div
+          role="group"
+          aria-label="Filter bookings"
+          className="-mx-3 flex gap-1.5 overflow-x-auto px-3 pb-0.5 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:gap-2 sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
+        >
           {statusFilters.map((item) => (
             <button
               key={item.key}
               type="button"
+              aria-pressed={filter === item.key}
               onClick={() => setFilter(item.key)}
               className={`hotel-btn shrink-0 px-3 text-xs sm:px-5 sm:text-sm ${
                 filter === item.key ? "hotel-btn-gold" : "hotel-btn-secondary"
@@ -75,8 +95,7 @@ export function ReservationsPanel() {
             <div className="min-w-0">
               <p className="hotel-label text-gold">New booking</p>
               <p className="mt-1 text-sm text-muted">
-                For future stays (Agoda, phone, walk-in). Pick a ready room, then enter
-                the guest name.
+                For guests arriving later. Pick a free room, then type the guest name.
               </p>
             </div>
             <button
@@ -85,13 +104,13 @@ export function ReservationsPanel() {
               onClick={() => setPickingRoom((v) => !v)}
               disabled={readyRooms.length === 0}
             >
-              {pickingRoom ? "Hide rooms" : "Pick a ready room"}
+              {pickingRoom ? "Hide rooms" : "Pick a free room"}
             </button>
           </div>
 
           {readyRooms.length === 0 && (
             <p className="mt-3 text-sm text-muted">
-              No ready rooms right now. Mark a room Ready on Front Desk first.
+              No free rooms right now. Mark a room Ready on Front Desk first.
             </p>
           )}
 
@@ -128,9 +147,11 @@ export function ReservationsPanel() {
 
       {reservations.length === 0 ? (
         <div className="hotel-card py-12 text-center">
-          <p className="font-display text-xl text-navy">No bookings yet</p>
+          <p className="font-display text-xl text-navy">Nothing here yet</p>
           <p className="mt-2 text-sm text-muted">
-            Tap &quot;Pick a ready room&quot; above, or check guests in on Front Desk.
+            {query
+              ? "No booking matches that name or room."
+              : "Tap “Pick a free room” above, or check guests in on Front Desk."}
           </p>
         </div>
       ) : (
@@ -158,7 +179,7 @@ export function ReservationsPanel() {
                     </h3>
                   </div>
                   <span className="staff-mode-badge shrink-0 rounded-full border border-border bg-cream px-2.5 py-1 text-navy">
-                    {reservation.status.replace("_", " ")}
+                    {reservationStatusLabels[reservation.status]}
                   </span>
                 </div>
                 <p className="mt-3 text-sm text-muted">
@@ -181,14 +202,32 @@ export function ReservationsPanel() {
                     <button
                       type="button"
                       className="hotel-btn hotel-btn-primary w-full sm:w-auto"
-                      onClick={() => activateBookedReservation(reservation.id)}
+                      onClick={() => {
+                        const ok = activateBookedReservation(reservation.id);
+                        notify(
+                          ok
+                            ? `${reservation.guest_name} checked in · Room ${room.room_number}`
+                            : "Could not check in — room must be Ready.",
+                          { tone: ok ? "success" : "error" },
+                        );
+                      }}
                     >
                       Check in now
                     </button>
                     <button
                       type="button"
                       className="hotel-btn hotel-btn-secondary w-full sm:w-auto"
-                      onClick={() => cancelReservation(reservation.id)}
+                      onClick={() => {
+                        if (
+                          !window.confirm(
+                            `Cancel the booking for ${reservation.guest_name}?`,
+                          )
+                        ) {
+                          return;
+                        }
+                        cancelReservation(reservation.id);
+                        notify(`Booking cancelled · ${reservation.guest_name}`);
+                      }}
                     >
                       Cancel booking
                     </button>
@@ -207,6 +246,7 @@ export function ReservationsPanel() {
           roomNumber={bookingRoom.room_number}
           defaultRate={bookingType.base_rate}
           onClose={() => setBookingRoomId(null)}
+          onSuccess={() => notify(`Booking saved · Room ${bookingRoom.room_number}`)}
         />
       )}
     </section>

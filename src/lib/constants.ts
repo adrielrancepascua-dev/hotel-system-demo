@@ -1,4 +1,9 @@
-import type { RequestStatus, RequestType, RoomStatus } from "@/lib/types";
+import type {
+  RequestStatus,
+  RequestType,
+  ReservationStatus,
+  RoomStatus,
+} from "@/lib/types";
 
 /** Desk-facing status labels — notebook language, not task-dispatch */
 export const roomStatusStyles: Record<
@@ -40,6 +45,26 @@ export const roomStatusStyles: Record<
     shortLabel: "Broken",
     dot: "bg-sky-500",
   },
+};
+
+export const roomStatusLabels: Record<RoomStatus, string> = {
+  ready: "Ready to sell",
+  occupied: "Occupied",
+  cleaning: "Being cleaned",
+  needs_cleaning: "Dirty",
+  maintenance: "Broken",
+};
+
+export const reservationStatusLabels: Record<ReservationStatus, string> = {
+  booked: "Booked",
+  checked_in: "In-house",
+  checked_out: "Checked out",
+  cancelled: "Cancelled",
+};
+
+export const requestStatusLabels: Record<RequestStatus, string> = {
+  pending: "Waiting",
+  completed: "Done",
 };
 
 export const requestTypeLabels: Record<RequestType, string> = {

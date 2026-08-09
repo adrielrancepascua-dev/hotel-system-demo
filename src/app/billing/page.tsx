@@ -3,10 +3,7 @@ import { BillingPanel } from "@/components/BillingPanel";
 
 export default function BillingPage() {
   return (
-    <OperationsPageLayout
-      title="Bills"
-      subtitle="Guest bills, extra charges, payments, and receipts."
-    >
+    <OperationsPageLayout subtitle="Guest bills, extra charges, payments, and printable receipts.">
       <BillingPanel />
     </OperationsPageLayout>
   );

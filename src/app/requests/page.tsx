@@ -4,8 +4,7 @@ import { RequestFeedPanel } from "@/components/RequestFeedPanel";
 export default function RequestsPage() {
   return (
     <OperationsPageLayout
-      title="Staff Request Feed"
-      subtitle="Incoming guest requests update instantly. Mark tasks complete when done."
+      subtitle="Everything guests asked for from their room. Tap Done when it is handled."
       maxWidthClass="max-w-5xl"
     >
       <RequestFeedPanel />

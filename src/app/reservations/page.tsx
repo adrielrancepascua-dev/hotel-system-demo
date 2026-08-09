@@ -3,10 +3,7 @@ import { ReservationsPanel } from "@/components/ReservationsPanel";
 
 export default function ReservationsPage() {
   return (
-    <OperationsPageLayout
-      title="Bookings"
-      subtitle="Save future stays here. Day-to-day check-in is on Front Desk."
-    >
+    <OperationsPageLayout subtitle="Save guests who are arriving later. Walk-ins are faster on Front Desk.">
       <ReservationsPanel />
     </OperationsPageLayout>
   );

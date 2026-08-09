@@ -2,12 +2,18 @@
 
 import { useMemo, useState } from "react";
 
-import { requestStatusStyles, requestTypeLabels } from "@/lib/constants";
+import { useToast } from "@/components/Toast";
+import {
+  requestStatusLabels,
+  requestStatusStyles,
+  requestTypeLabels,
+} from "@/lib/constants";
 import { useDemoStore } from "@/lib/store/DemoStore";
 
 export function RequestFeedPanel() {
   const { state, hydrated, completeRequest } = useDemoStore();
-  const [workingId, setWorkingId] = useState<number | null>(null);
+  const { notify } = useToast();
+  const [showDone, setShowDone] = useState(true);
 
   const requests = useMemo(
     () =>
@@ -18,56 +24,68 @@ export function RequestFeedPanel() {
   );
 
   const pendingCount = requests.filter((r) => r.status === "pending").length;
-
-  async function markCompleted(id: number) {
-    setWorkingId(id);
-    completeRequest(id);
-    setWorkingId(null);
-  }
+  const visible = showDone ? requests : requests.filter((r) => r.status === "pending");
 
   if (!hydrated) {
     return <p className="px-4 text-sm text-muted sm:px-6">Loading requests…</p>;
   }
 
   return (
-    <section className="mx-auto w-full max-w-5xl px-3 py-4 sm:px-6 sm:py-6">
-      {requests.length > 0 && (
-        <div className="mb-4 flex items-stretch gap-2 sm:mb-5 sm:gap-4">
-          <div className="hotel-stat flex-1">
-            <p className="hotel-label">Total Requests</p>
-            <p className="hotel-stat-value mt-1">{requests.length}</p>
-          </div>
-          <div className="hotel-stat flex-1">
-            <p className="hotel-label">Awaiting Action</p>
-            <p className="hotel-stat-value mt-1 text-gold">{pendingCount}</p>
-          </div>
+    <section className="mx-auto w-full max-w-5xl px-3 py-3 sm:px-6 sm:py-5">
+      <div className="mb-4 flex items-stretch gap-2 sm:mb-5 sm:gap-4">
+        <div className="hotel-stat hotel-card-accent flex-1">
+          <p className="hotel-label">Waiting</p>
+          <p className="hotel-stat-value mt-1 text-gold">{pendingCount}</p>
         </div>
-      )}
+        <div className="hotel-stat hotel-card-accent flex-1">
+          <p className="hotel-label">All requests</p>
+          <p className="hotel-stat-value mt-1">{requests.length}</p>
+        </div>
+      </div>
 
-      {requests.length === 0 ? (
+      <div className="mb-4 flex gap-2">
+        <button
+          type="button"
+          aria-pressed={!showDone}
+          onClick={() => setShowDone(false)}
+          className={`hotel-btn ${!showDone ? "hotel-btn-gold" : "hotel-btn-secondary"}`}
+        >
+          Waiting only
+        </button>
+        <button
+          type="button"
+          aria-pressed={showDone}
+          onClick={() => setShowDone(true)}
+          className={`hotel-btn ${showDone ? "hotel-btn-gold" : "hotel-btn-secondary"}`}
+        >
+          Show all
+        </button>
+      </div>
+
+      {visible.length === 0 ? (
         <div className="hotel-card py-12 text-center">
           <p className="font-display text-xl text-navy">All clear</p>
-          <p className="mt-2 text-sm text-muted">No guest requests at the moment.</p>
+          <p className="mt-2 text-sm text-muted">Nothing waiting right now.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {requests.map((request) => {
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
+          {visible.map((request) => {
             const staff = state.staff.find((s) => s.id === request.completed_by_staff_id);
             return (
               <article
                 key={request.id}
-                className={`hotel-card hotel-card-accent staff-mode-card p-5 transition ${
+                className={`hotel-card hotel-card-accent staff-mode-card p-4 transition sm:p-5 ${
                   request.status === "pending" ? "border-gold/30" : "opacity-80"
                 }`}
               >
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div className="min-w-0">
                     <p className="hotel-label text-gold">Room {request.room_number}</p>
-                    <p className="mt-1 font-display text-lg font-semibold text-navy">
+                    <p className="font-display mt-1 text-lg font-semibold text-navy">
                       {requestTypeLabels[request.request_type]}
                     </p>
                     <p className="mt-1 text-sm text-muted">
-                      {new Date(request.created_at).toLocaleString()}
+                      {new Date(request.created_at).toLocaleString("en-PH")}
                     </p>
                     {request.notes && (
                       <p className="mt-2 text-sm text-navy">{request.notes}</p>
@@ -76,12 +94,12 @@ export function RequestFeedPanel() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={request.photo_url}
-                        alt="Guest attachment"
+                        alt={`Photo from room ${request.room_number}`}
                         className="mt-3 max-h-40 rounded-lg border border-border object-cover"
                       />
                     )}
                     {request.status === "completed" && staff && (
-                      <p className="mt-2 text-xs text-muted">Completed by {staff.name}</p>
+                      <p className="mt-2 text-xs text-muted">Handled by {staff.name}</p>
                     )}
                   </div>
 
@@ -89,18 +107,20 @@ export function RequestFeedPanel() {
                     <span
                       className={`staff-mode-badge rounded-full px-3 py-1 ${requestStatusStyles[request.status]}`}
                     >
-                      {request.status}
+                      {requestStatusLabels[request.status]}
                     </span>
                     {request.status === "pending" && (
                       <button
                         type="button"
-                        disabled={workingId === request.id}
                         onClick={() => {
-                          void markCompleted(request.id);
+                          completeRequest(request.id);
+                          notify(
+                            `Done: ${requestTypeLabels[request.request_type]} · Rm ${request.room_number}`,
+                          );
                         }}
-                        className="hotel-btn hotel-btn-primary min-h-10 px-4 text-sm disabled:opacity-60"
+                        className="hotel-btn hotel-btn-primary min-h-11 px-4 text-sm"
                       >
-                        Mark Completed
+                        Mark done
                       </button>
                     )}
                   </div>

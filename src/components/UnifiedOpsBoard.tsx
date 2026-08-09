@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 
 import { CheckInModal } from "@/components/CheckInModal";
+import { useToast } from "@/components/Toast";
 import {
   paymentMethodLabels,
   requestTypeLabels,
@@ -30,6 +31,13 @@ const summaryOrder: Array<{ key: RoomStatus; filter: DeskFilter }> = [
   { key: "maintenance", filter: "ooo" },
 ];
 
+const quickCharges: Array<[string, number]> = [
+  ["Extra towels", 150],
+  ["Late checkout", 500],
+  ["Minibar", 250],
+  ["Laundry", 300],
+];
+
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -47,17 +55,18 @@ export function UnifiedOpsBoard() {
     activateBookedReservation,
     cancelReservation,
   } = useDemoStore();
+  const { notify } = useToast();
 
   const [filter, setFilter] = useState<DeskFilter>("all");
+  const [query, setQuery] = useState("");
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
   const [showCheckIn, setShowCheckIn] = useState(false);
-  const [checkoutStep, setCheckoutStep] = useState<"idle" | "pay" | "done">("idle");
+  const [checkoutStep, setCheckoutStep] = useState<"idle" | "pay">("idle");
   const [payAmount, setPayAmount] = useState(0);
   const [payMethod, setPayMethod] = useState<PaymentMethod>("gcash");
   const [chargeDesc, setChargeDesc] = useState("Extra towels");
   const [chargeAmount, setChargeAmount] = useState(150);
   const [showCharge, setShowCharge] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
   const [isPanelClosing, setIsPanelClosing] = useState(false);
   const actionsPanelRef = useRef<HTMLElement | null>(null);
 
@@ -69,12 +78,6 @@ export function UnifiedOpsBoard() {
     });
     return () => window.cancelAnimationFrame(id);
   }, [selectedRoomId]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = window.setTimeout(() => setToast(null), 4500);
-    return () => window.clearTimeout(t);
-  }, [toast]);
 
   const today = todayIso();
 
@@ -89,16 +92,30 @@ export function UnifiedOpsBoard() {
   }, [state.rooms]);
 
   const rooms = useMemo(() => {
+    const search = query.trim().toLowerCase();
+
     return state.rooms.filter((room) => {
-      if (filter === "all") return true;
-      if (filter === "sell") return room.status === "ready";
-      if (filter === "inhouse") return room.status === "occupied";
-      if (filter === "dirty")
-        return room.status === "needs_cleaning" || room.status === "cleaning";
-      if (filter === "ooo") return room.status === "maintenance";
-      return true;
+      const matchesFilter =
+        filter === "all"
+          ? true
+          : filter === "sell"
+            ? room.status === "ready"
+            : filter === "inhouse"
+              ? room.status === "occupied"
+              : filter === "dirty"
+                ? room.status === "needs_cleaning" || room.status === "cleaning"
+                : room.status === "maintenance";
+
+      if (!matchesFilter) return false;
+      if (!search) return true;
+
+      const guest = getActiveReservation(room.id, state.reservations)?.guest_name ?? "";
+      return (
+        room.room_number.toLowerCase().includes(search) ||
+        guest.toLowerCase().includes(search)
+      );
     });
-  }, [state.rooms, filter]);
+  }, [state.rooms, state.reservations, filter, query]);
 
   const selectedRoom = state.rooms.find((r) => r.id === selectedRoomId) ?? null;
   const selectedType = selectedRoom
@@ -110,13 +127,13 @@ export function UnifiedOpsBoard() {
   const bookedHold = selectedRoom
     ? getBookedReservation(selectedRoom.id, state.reservations)
     : undefined;
-  const activeFolio = activeReservation
-    ? getFolioForReservation(activeReservation.id, state.folios)
-    : undefined;
-  const balance =
-    activeFolio != null
-      ? folioBalance(activeFolio.id, state.charges, state.payments)
-      : 0;
+  const activeFolio =
+    activeReservation?.status === "checked_in"
+      ? getFolioForReservation(activeReservation.id, state.folios)
+      : undefined;
+  const balance = activeFolio
+    ? folioBalance(activeFolio.id, state.charges, state.payments)
+    : 0;
   const folioCharges = activeFolio
     ? state.charges.filter((c) => c.folio_id === activeFolio.id)
     : [];
@@ -131,7 +148,6 @@ export function UnifiedOpsBoard() {
     return state.folios
       .filter((f) => f.status === "open")
       .map((f) => ({
-        folio: f,
         balance: folioBalance(f.id, state.charges, state.payments),
         reservation: state.reservations.find((r) => r.id === f.reservation_id),
       }))
@@ -142,10 +158,6 @@ export function UnifiedOpsBoard() {
     (r) => r.status === "needs_cleaning" || r.status === "cleaning",
   );
   const pendingRequests = state.requests.filter((r) => r.status === "pending");
-
-  function flash(message: string) {
-    setToast(message);
-  }
 
   function clearRoomPanel() {
     setIsPanelClosing(true);
@@ -158,9 +170,24 @@ export function UnifiedOpsBoard() {
     }, 220);
   }
 
+  useEffect(() => {
+    if (selectedRoomId === null || showCheckIn) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") clearRoomPanel();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedRoomId, showCheckIn]);
+
+  /** Every status change is reversible — desk staff tap fast and misclick. */
   function changeRoomStatus(roomId: number, nextStatus: RoomStatus, message: string) {
+    const previousStatus = state.rooms.find((r) => r.id === roomId)?.status;
     updateRoomStatus(roomId, nextStatus);
-    flash(message);
+    notify(message, {
+      onUndo: previousStatus
+        ? () => updateRoomStatus(roomId, previousStatus)
+        : undefined,
+    });
     clearRoomPanel();
   }
 
@@ -168,9 +195,8 @@ export function UnifiedOpsBoard() {
     if (!selectedRoom) return;
     const roomNumber = selectedRoom.room_number;
     checkOutGuest(selectedRoom.id, closeTheBill);
-    setCheckoutStep("done");
     setShowCharge(false);
-    flash(`Room ${roomNumber} checked out · marked Dirty. Radio housekeeping now.`);
+    notify(`Room ${roomNumber} checked out. It is now Dirty — tell housekeeping.`);
     clearRoomPanel();
   }
 
@@ -202,18 +228,12 @@ export function UnifiedOpsBoard() {
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-3 py-3 sm:gap-4 sm:px-6 sm:py-5">
-      {toast && (
-        <div className="hotel-alert hotel-alert-success sticky top-[3.75rem] z-30 shadow-md sm:top-20" role="status" aria-live="polite">
-          {toast}
-        </div>
-      )}
-
-      {/* Compact shift strip — hidden on mobile while a room is open */}
+      {/* Shift snapshot — hidden on mobile while a room is open */}
       <div
         className={`grid grid-cols-3 gap-1.5 sm:gap-3 ${roomSelected ? "hidden lg:grid" : ""}`}
       >
         <article className="hotel-stat hotel-card-accent min-w-0 px-2 py-2 sm:px-5 sm:py-4">
-          <p className="hotel-label truncate">Leaving</p>
+          <p className="hotel-label truncate">Leaving today</p>
           <p className="hotel-stat-value mt-0.5 text-xl sm:mt-1 sm:text-[2rem]">
             {departingToday.length}
           </p>
@@ -236,21 +256,19 @@ export function UnifiedOpsBoard() {
             {dirtyRooms.length}
           </p>
           <p className="mt-0.5 truncate text-[0.625rem] text-muted sm:mt-1 sm:text-xs">
-            Radio HK, then Ready
+            Tell housekeeping
           </p>
         </article>
       </div>
 
       {pendingRequests.length > 0 && (
-        <div
-          className={`hotel-card p-3 sm:p-4 ${roomSelected ? "hidden lg:block" : ""}`}
-        >
+        <div className={`hotel-card p-3 sm:p-4 ${roomSelected ? "hidden lg:block" : ""}`}>
           <div className="flex items-center justify-between gap-2">
             <p className="hotel-label text-gold">
-              Guest asks · {pendingRequests.length}
+              Guest requests · {pendingRequests.length}
             </p>
             <Link href="/requests" className="text-xs font-semibold text-gold underline">
-              All
+              See all
             </Link>
           </div>
           <ul className="mt-2 space-y-2">
@@ -264,7 +282,9 @@ export function UnifiedOpsBoard() {
                     Rm {request.room_number} · {requestTypeLabels[request.request_type]}
                   </p>
                   {request.notes ? (
-                    <p className="mt-0.5 line-clamp-1 text-xs text-muted">{request.notes}</p>
+                    <p className="mt-0.5 line-clamp-1 text-xs text-muted">
+                      {request.notes}
+                    </p>
                   ) : null}
                 </div>
                 <button
@@ -272,7 +292,7 @@ export function UnifiedOpsBoard() {
                   className="hotel-btn hotel-btn-secondary min-h-9 shrink-0 px-2.5 text-xs"
                   onClick={() => {
                     completeRequest(request.id);
-                    flash(
+                    notify(
                       `Done: ${requestTypeLabels[request.request_type]} · Rm ${request.room_number}`,
                     );
                   }}
@@ -285,7 +305,24 @@ export function UnifiedOpsBoard() {
         </div>
       )}
 
+      <div className={roomSelected ? "hidden lg:block" : ""}>
+        <label htmlFor="room-search" className="sr-only">
+          Search room number or guest name
+        </label>
+        <input
+          id="room-search"
+          type="search"
+          inputMode="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search room number or guest name…"
+          className="hotel-input"
+        />
+      </div>
+
       <div
+        role="group"
+        aria-label="Filter rooms"
         className={`-mx-3 flex gap-1.5 overflow-x-auto px-3 pb-0.5 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:gap-2 sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden ${
           roomSelected ? "hidden lg:flex" : ""
         }`}
@@ -302,6 +339,7 @@ export function UnifiedOpsBoard() {
           <button
             key={key}
             type="button"
+            aria-pressed={filter === key}
             onClick={() => setFilter(key)}
             className={`hotel-btn shrink-0 px-3 text-xs sm:px-5 sm:text-sm ${
               filter === key ? "hotel-btn-gold" : "hotel-btn-secondary"
@@ -321,13 +359,16 @@ export function UnifiedOpsBoard() {
             <button
               key={key}
               type="button"
+              aria-label={`${theme.label}: ${stats[key]} rooms. Tap to filter.`}
               onClick={() => setFilter(chipFilter)}
               className={`hotel-stat min-w-0 px-1.5 py-2 text-left transition hover:border-gold/50 sm:px-5 sm:py-4 ${
                 filter === chipFilter ? "border-gold/60 ring-1 ring-gold/40" : ""
               }`}
             >
               <div className="flex items-center justify-center gap-1 sm:justify-start sm:gap-1.5">
-                <span className={`h-1.5 w-1.5 shrink-0 rounded-full sm:h-2 sm:w-2 ${theme.dot}`} />
+                <span
+                  className={`h-1.5 w-1.5 shrink-0 rounded-full sm:h-2 sm:w-2 ${theme.dot}`}
+                />
                 <p className="hotel-label truncate text-[0.5rem] sm:text-[0.6875rem]">
                   {theme.shortLabel}
                 </p>
@@ -343,6 +384,7 @@ export function UnifiedOpsBoard() {
       <div className="grid gap-3 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         <aside
           ref={actionsPanelRef}
+          aria-label="Room actions"
           className={`hotel-card hotel-card-accent order-1 h-fit p-3.5 transition-all duration-200 ease-out sm:p-5 lg:sticky lg:top-20 lg:order-2 ${
             selectedRoom ? "block" : "hidden lg:block"
           } ${isPanelClosing ? "pointer-events-none translate-x-2 opacity-0" : "translate-x-0 opacity-100"}`}
@@ -376,7 +418,7 @@ export function UnifiedOpsBoard() {
                 <div className="mt-3 rounded-lg bg-cream px-3 py-2 text-sm">
                   <p className="font-semibold text-navy">{activeReservation.guest_name}</p>
                   <p className="truncate text-muted">
-                    Out {activeReservation.check_out_date}
+                    Leaves {activeReservation.check_out_date}
                     {activeReservation.phone ? ` · ${activeReservation.phone}` : ""}
                   </p>
                   {activeFolio && (
@@ -389,14 +431,13 @@ export function UnifiedOpsBoard() {
 
               <div className="hotel-divider my-3" />
 
-              {/* Status-driven desk actions */}
               <div className="space-y-2">
                 {selectedRoom.status === "ready" && (
                   <>
                     {bookedHold ? (
                       <>
                         <p className="rounded-lg bg-cream px-3 py-2 text-sm text-navy">
-                          Held for <strong>{bookedHold.guest_name}</strong> · arrive{" "}
+                          Saved for <strong>{bookedHold.guest_name}</strong> · arriving{" "}
                           {bookedHold.check_in_date}
                         </p>
                         <button
@@ -404,22 +445,33 @@ export function UnifiedOpsBoard() {
                           className="staff-mode-action staff-mode-action-primary"
                           onClick={() => {
                             const ok = activateBookedReservation(bookedHold.id);
-                            flash(
-                              ok
-                                ? `Checked in · Room ${selectedRoom.room_number}`
-                                : "Could not check in — room must be Ready",
-                            );
-                            if (ok) clearRoomPanel();
+                            if (ok) {
+                              notify(
+                                `${bookedHold.guest_name} checked in · Room ${selectedRoom.room_number}`,
+                              );
+                              clearRoomPanel();
+                            } else {
+                              notify("Could not check in — room must be Ready.", {
+                                tone: "error",
+                              });
+                            }
                           }}
                         >
-                          Check in held guest
+                          Check in {bookedHold.guest_name.split(" ")[0]}
                         </button>
                         <button
                           type="button"
                           className="staff-mode-action staff-mode-action-secondary"
                           onClick={() => {
+                            if (
+                              !window.confirm(
+                                `Cancel the booking for ${bookedHold.guest_name}?`,
+                              )
+                            ) {
+                              return;
+                            }
                             cancelReservation(bookedHold.id);
-                            flash(`Booking cancelled · Room ${selectedRoom.room_number}`);
+                            notify(`Booking cancelled · Room ${selectedRoom.room_number}`);
                             clearRoomPanel();
                           }}
                         >
@@ -491,7 +543,8 @@ export function UnifiedOpsBoard() {
                   selectedRoom.status === "cleaning") && (
                   <>
                     <p className="rounded-lg border border-amber-300/50 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:bg-amber-950/30 dark:text-amber-100">
-                      Radio HK for this room. When done, tap Ready below.
+                      Call or text housekeeping. When they say it&apos;s finished, tap
+                      Ready to sell.
                     </p>
                     <button
                       type="button"
@@ -500,11 +553,11 @@ export function UnifiedOpsBoard() {
                         changeRoomStatus(
                           selectedRoom.id,
                           "ready",
-                          `Room ${selectedRoom.room_number} ready to sell`,
+                          `Room ${selectedRoom.room_number} is ready to sell`,
                         )
                       }
                     >
-                      Mark ready to sell
+                      Ready to sell
                     </button>
                     {selectedRoom.status === "needs_cleaning" && (
                       <button
@@ -514,11 +567,11 @@ export function UnifiedOpsBoard() {
                           changeRoomStatus(
                             selectedRoom.id,
                             "cleaning",
-                            `Room ${selectedRoom.room_number}: noted as being cleaned`,
+                            `Room ${selectedRoom.room_number} is being cleaned`,
                           )
                         }
                       >
-                        HK started
+                        Cleaning now
                       </button>
                     )}
                     <button
@@ -546,7 +599,7 @@ export function UnifiedOpsBoard() {
                         changeRoomStatus(
                           selectedRoom.id,
                           "ready",
-                          `Room ${selectedRoom.room_number} back on sale`,
+                          `Room ${selectedRoom.room_number} is back on sale`,
                         )
                       }
                     >
@@ -576,56 +629,59 @@ export function UnifiedOpsBoard() {
                     e.preventDefault();
                     if (chargeAmount <= 0) return;
                     addCharge(activeFolio.id, chargeDesc || "Charge", chargeAmount, "other");
-                    flash(`Added ${formatMoney(chargeAmount)} to bill`);
+                    notify(`Added ${formatMoney(chargeAmount)} to the bill`);
                     setShowCharge(false);
                   }}
                 >
                   <p className="hotel-label">Add to bill</p>
+                  <div className="flex flex-wrap gap-2">
+                    {quickCharges.map(([label, amt]) => (
+                      <button
+                        key={label}
+                        type="button"
+                        className={`hotel-btn text-xs ${
+                          chargeDesc === label ? "hotel-btn-gold" : "hotel-btn-secondary"
+                        }`}
+                        onClick={() => {
+                          setChargeDesc(label);
+                          setChargeAmount(amt);
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <label className="sr-only" htmlFor="charge-desc">
+                    What is the charge for
+                  </label>
                   <input
+                    id="charge-desc"
                     value={chargeDesc}
                     onChange={(e) => setChargeDesc(e.target.value)}
-                    className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
+                    className="hotel-input text-sm"
                     placeholder="What for?"
                   />
+                  <label className="sr-only" htmlFor="charge-amount">
+                    Amount in pesos
+                  </label>
                   <input
+                    id="charge-amount"
                     type="number"
                     min={0}
                     step={1}
                     value={chargeAmount}
                     onChange={(e) => setChargeAmount(Number(e.target.value))}
-                    className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
+                    className="hotel-input text-sm"
                   />
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      ["Extra towels", 150],
-                      ["Late checkout", 500],
-                      ["Minibar", 250],
-                    ].map(([label, amt]) => (
-                      <button
-                        key={label as string}
-                        type="button"
-                        className="hotel-btn hotel-btn-secondary text-xs"
-                        onClick={() => {
-                          setChargeDesc(label as string);
-                          setChargeAmount(amt as number);
-                        }}
-                      >
-                        {label as string}
-                      </button>
-                    ))}
-                  </div>
                   <button type="submit" className="hotel-btn hotel-btn-primary w-full">
-                    Post {formatMoney(chargeAmount)}
+                    Add {formatMoney(chargeAmount)}
                   </button>
                 </form>
               )}
 
               {checkoutStep === "pay" && activeFolio && (
                 <div className="mt-4 space-y-3 rounded-xl border border-gold/40 bg-cream p-3">
-                  <p className="font-semibold text-navy">Checkout</p>
-                  <p className="text-sm text-muted">
-                    Collect what&apos;s owed, then the room goes Dirty so you can radio HK.
-                  </p>
+                  <p className="font-semibold text-navy">Checking out</p>
                   {folioCharges.length > 0 && (
                     <ul className="max-h-28 space-y-1 overflow-y-auto text-sm">
                       {folioCharges.map((c) => (
@@ -641,19 +697,27 @@ export function UnifiedOpsBoard() {
                   </p>
                   {balance > 0 ? (
                     <>
+                      <label className="sr-only" htmlFor="pay-amount">
+                        Amount received
+                      </label>
                       <input
+                        id="pay-amount"
                         type="number"
                         min={0}
                         step={1}
                         value={payAmount || ""}
                         onChange={(e) => setPayAmount(Number(e.target.value))}
-                        className="w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-navy"
-                        placeholder="Amount"
+                        className="hotel-input"
+                        placeholder="Amount received"
                       />
+                      <label className="sr-only" htmlFor="pay-method">
+                        Payment method
+                      </label>
                       <select
+                        id="pay-method"
                         value={payMethod}
                         onChange={(e) => setPayMethod(e.target.value as PaymentMethod)}
-                        className="w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-navy"
+                        className="hotel-input"
                       >
                         {(Object.keys(paymentMethodLabels) as PaymentMethod[]).map((m) => (
                           <option key={m} value={m}>
@@ -678,19 +742,29 @@ export function UnifiedOpsBoard() {
                         finishCheckout(true);
                       }}
                     >
-                      Balance clear — check out
+                      Fully paid — check out
                     </button>
                   )}
                   <button
                     type="button"
                     className="staff-mode-action staff-mode-action-secondary"
-                    onClick={() => finishCheckout(false)}
+                    onClick={() => {
+                      if (
+                        balance > 0 &&
+                        !window.confirm(
+                          `${formatMoney(balance)} is still unpaid. Check out anyway and collect later?`,
+                        )
+                      ) {
+                        return;
+                      }
+                      finishCheckout(false);
+                    }}
                   >
                     Check out, pay bill later
                   </button>
                   <button
                     type="button"
-                    className="text-sm text-muted underline"
+                    className="min-h-11 w-full text-sm text-muted underline"
                     onClick={() => setCheckoutStep("idle")}
                   >
                     Cancel checkout
@@ -719,8 +793,8 @@ export function UnifiedOpsBoard() {
             <div className="py-8 text-center">
               <p className="font-display text-lg text-navy">Pick a room</p>
               <p className="mt-2 text-sm text-muted">
-                Check guests in and out, add charges, and update status after you radio
-                housekeeping — all from here.
+                Tap any room to check a guest in or out, add a charge, or change its
+                status.
               </p>
             </div>
           )}
@@ -732,68 +806,86 @@ export function UnifiedOpsBoard() {
           }`}
         >
           {rooms.length === 0 ? (
-            <div className="col-span-full hotel-card py-10 text-center">
-              <p className="font-display text-lg text-navy">No rooms in this filter</p>
-              <p className="mt-1 text-sm text-muted">Tap All to see every room again.</p>
+            <div className="hotel-card col-span-full py-10 text-center">
+              <p className="font-display text-lg text-navy">No rooms found</p>
+              <p className="mt-1 text-sm text-muted">
+                {query
+                  ? "Try a different room number or name."
+                  : "Tap All to see every room again."}
+              </p>
+              {query && (
+                <button
+                  type="button"
+                  className="hotel-btn hotel-btn-secondary mt-3"
+                  onClick={() => setQuery("")}
+                >
+                  Clear search
+                </button>
+              )}
             </div>
           ) : (
-          rooms.map((room) => {
-            const theme = roomStatusStyles[room.status];
-            const type = getRoomType(room, state.roomTypes);
-            const reservation = getActiveReservation(room.id, state.reservations);
-            const isSelected = room.id === selectedRoomId;
-            const folio = reservation?.status === "checked_in"
-              ? getFolioForReservation(reservation.id, state.folios)
-              : undefined;
-            const due = folio
-              ? folioBalance(folio.id, state.charges, state.payments)
-              : 0;
-            const held = reservation?.status === "booked";
+            rooms.map((room) => {
+              const theme = roomStatusStyles[room.status];
+              const type = getRoomType(room, state.roomTypes);
+              const reservation = getActiveReservation(room.id, state.reservations);
+              const isSelected = room.id === selectedRoomId;
+              const held = reservation?.status === "booked";
+              const folio =
+                reservation?.status === "checked_in"
+                  ? getFolioForReservation(reservation.id, state.folios)
+                  : undefined;
+              const due = folio
+                ? folioBalance(folio.id, state.charges, state.payments)
+                : 0;
 
-            return (
-              <button
-                key={room.id}
-                type="button"
-                onClick={() => {
-                  setIsPanelClosing(false);
-                  setSelectedRoomId(room.id);
-                  setCheckoutStep("idle");
-                  setShowCharge(false);
-                }}
-                aria-pressed={isSelected}
-                aria-label={`Room ${room.room_number}, ${held ? "Held" : theme.label}`}
-                className={`staff-mode-card min-h-24 w-full rounded-xl border p-2.5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 sm:min-h-32 sm:p-4 ${theme.card} ${
-                  isSelected ? "ring-2 ring-gold/60 shadow-md" : ""
-                }`}
-              >
-                <div className="flex items-start justify-between gap-1">
-                  <p className="hotel-label truncate text-muted">
-                    {type?.name ?? "Room"}
-                  </p>
-                  <span className={`mt-0.5 h-2 w-2 shrink-0 rounded-full sm:h-2.5 sm:w-2.5 ${theme.dot}`} />
-                </div>
-                <p className="font-display mt-0.5 text-xl font-semibold text-navy sm:text-3xl">
-                  {room.room_number}
-                </p>
-                <span
-                  className={`staff-mode-badge mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[0.625rem] sm:mt-2 sm:px-2.5 sm:text-xs ${
-                    held
-                      ? "bg-navy-deep/90 text-white dark:bg-gold/20 dark:text-gold-light"
-                      : theme.badge
+              return (
+                <button
+                  key={room.id}
+                  type="button"
+                  onClick={() => {
+                    setIsPanelClosing(false);
+                    setSelectedRoomId(room.id);
+                    setCheckoutStep("idle");
+                    setShowCharge(false);
+                  }}
+                  aria-pressed={isSelected}
+                  aria-label={`Room ${room.room_number}, ${type?.name ?? "room"}, ${
+                    held ? "saved for a booking" : theme.label
+                  }`}
+                  className={`staff-mode-card min-h-24 w-full rounded-xl border p-2.5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 sm:min-h-32 sm:p-4 ${theme.card} ${
+                    isSelected ? "shadow-md ring-2 ring-gold/60" : ""
                   }`}
                 >
-                  {held ? "Held" : theme.shortLabel}
-                </span>
-                <p className="mt-1.5 truncate text-[0.6875rem] text-muted sm:mt-2 sm:text-xs">
-                  {reservation
-                    ? `${held ? "Hold · " : ""}${reservation.guest_name}${due > 0 ? ` · ${formatMoney(due)}` : ""}`
-                    : room.status === "ready"
-                      ? `Sell @ ${formatMoney(type?.base_rate ?? 0)}`
-                      : "—"}
-                </p>
-              </button>
-            );
-          })
+                  <div className="flex items-start justify-between gap-1">
+                    <p className="hotel-label truncate text-muted">
+                      {type?.name ?? "Room"}
+                    </p>
+                    <span
+                      className={`mt-0.5 h-2 w-2 shrink-0 rounded-full sm:h-2.5 sm:w-2.5 ${theme.dot}`}
+                    />
+                  </div>
+                  <p className="font-display mt-0.5 text-xl font-semibold text-navy sm:text-3xl">
+                    {room.room_number}
+                  </p>
+                  <span
+                    className={`staff-mode-badge mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[0.625rem] sm:mt-2 sm:px-2.5 sm:text-xs ${
+                      held
+                        ? "bg-navy-deep/90 text-white dark:bg-gold/20 dark:text-gold-light"
+                        : theme.badge
+                    }`}
+                  >
+                    {held ? "Saved" : theme.shortLabel}
+                  </span>
+                  <p className="mt-1.5 truncate text-[0.6875rem] text-muted sm:mt-2 sm:text-xs">
+                    {reservation
+                      ? `${held ? "For " : ""}${reservation.guest_name}${due > 0 ? ` · ${formatMoney(due)}` : ""}`
+                      : room.status === "ready"
+                        ? `${formatMoney(type?.base_rate ?? 0)}/night`
+                        : "—"}
+                  </p>
+                </button>
+              );
+            })
           )}
         </div>
       </div>
@@ -805,7 +897,7 @@ export function UnifiedOpsBoard() {
           defaultRate={selectedType.base_rate}
           onClose={() => setShowCheckIn(false)}
           onSuccess={() => {
-            flash(`Checked in · Room ${selectedRoom.room_number}`);
+            notify(`Checked in · Room ${selectedRoom.room_number}`);
             clearRoomPanel();
           }}
         />

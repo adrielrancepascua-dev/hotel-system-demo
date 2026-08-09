@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import Link from "next/link";
 
 import { CheckInModal } from "@/components/CheckInModal";
@@ -385,9 +391,9 @@ export function UnifiedOpsBoard() {
         <aside
           ref={actionsPanelRef}
           aria-label="Room actions"
-          className={`hotel-card hotel-card-accent order-1 h-fit p-3.5 transition-all duration-200 ease-out sm:p-5 lg:sticky lg:top-20 lg:order-2 ${
+          className={`hotel-card hotel-card-accent order-1 h-fit p-3.5 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] sm:p-5 lg:sticky lg:top-20 lg:order-2 ${
             selectedRoom ? "block" : "hidden lg:block"
-          } ${isPanelClosing ? "pointer-events-none translate-x-2 opacity-0" : "translate-x-0 opacity-100"}`}
+          } ${isPanelClosing ? "pointer-events-none translate-x-3 opacity-0" : "translate-x-0 opacity-100"}`}
         >
           {selectedRoom ? (
             <>
@@ -624,7 +630,7 @@ export function UnifiedOpsBoard() {
 
               {showCharge && activeFolio && (
                 <form
-                  className="mt-4 space-y-2 rounded-xl border border-border bg-cream p-3"
+                  className="hotel-animate-rise mt-4 space-y-2 rounded-xl border border-border bg-cream p-3"
                   onSubmit={(e) => {
                     e.preventDefault();
                     if (chargeAmount <= 0) return;
@@ -801,7 +807,8 @@ export function UnifiedOpsBoard() {
         </aside>
 
         <div
-          className={`order-2 grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:order-1 xl:grid-cols-4 ${
+          style={{ "--stagger-step": "25ms" } as CSSProperties}
+          className={`hotel-stagger order-2 grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:order-1 xl:grid-cols-4 ${
             roomSelected ? "hidden lg:grid" : ""
           }`}
         >
@@ -824,7 +831,7 @@ export function UnifiedOpsBoard() {
               )}
             </div>
           ) : (
-            rooms.map((room) => {
+            rooms.map((room, index) => {
               const theme = roomStatusStyles[room.status];
               const type = getRoomType(room, state.roomTypes);
               const reservation = getActiveReservation(room.id, state.reservations);
@@ -842,6 +849,7 @@ export function UnifiedOpsBoard() {
                 <button
                   key={room.id}
                   type="button"
+                  style={{ "--i": index } as CSSProperties}
                   onClick={() => {
                     setIsPanelClosing(false);
                     setSelectedRoomId(room.id);
@@ -852,7 +860,7 @@ export function UnifiedOpsBoard() {
                   aria-label={`Room ${room.room_number}, ${type?.name ?? "room"}, ${
                     held ? "saved for a booking" : theme.label
                   }`}
-                  className={`staff-mode-card min-h-24 w-full rounded-xl border p-2.5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 sm:min-h-32 sm:p-4 ${theme.card} ${
+                  className={`staff-mode-card min-h-24 w-full rounded-xl border p-2.5 text-left shadow-sm transition-[transform,box-shadow,border-color,background-color] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 active:scale-[0.97] sm:min-h-32 sm:p-4 [@media(hover:hover)]:hover:-translate-y-0.5 [@media(hover:hover)]:hover:shadow-md ${theme.card} ${
                     isSelected ? "shadow-md ring-2 ring-gold/60" : ""
                   }`}
                 >

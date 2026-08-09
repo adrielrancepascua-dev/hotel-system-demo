@@ -51,7 +51,22 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       title="Toggle dark mode"
       disabled={!ready}
     >
-      {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+      <span className="relative inline-flex h-5 w-5 shrink-0 items-center justify-center">
+        <SunIcon
+          className={`absolute h-5 w-5 transition-all duration-300 ease-out ${
+            theme === "dark"
+              ? "rotate-0 scale-100 opacity-100"
+              : "-rotate-90 scale-50 opacity-0"
+          }`}
+        />
+        <MoonIcon
+          className={`absolute h-5 w-5 transition-all duration-300 ease-out ${
+            theme === "dark"
+              ? "rotate-90 scale-50 opacity-0"
+              : "rotate-0 scale-100 opacity-100"
+          }`}
+        />
+      </span>
       <span className="hidden sm:inline">{theme === "dark" ? "Light" : "Dark"}</span>
     </button>
   );

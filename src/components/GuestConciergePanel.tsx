@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 
 import { ConciergeIcon, HotelIcon } from "@/components/icons";
 import { paymentMethodLabels, requestTypeLabels } from "@/lib/constants";
@@ -153,7 +153,11 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
         </header>
 
         {message && (
-          <p className="hotel-alert hotel-alert-success" role="status" aria-live="polite">
+          <p
+            className="hotel-alert hotel-alert-success hotel-animate-rise"
+            role="status"
+            aria-live="polite"
+          >
             {message}
           </p>
         )}
@@ -177,7 +181,7 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
         )}
 
         {showBill && folio && (
-          <article className="hotel-card p-4 sm:p-5">
+          <article className="hotel-card hotel-animate-rise p-4 sm:p-5">
             <h2 className="hotel-label">Charges</h2>
             <ul className="mt-3 space-y-2">
               {charges.map((charge) => (
@@ -219,7 +223,7 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
           </div>
 
           {selectedType ? (
-            <div className="mt-3 space-y-3">
+            <div className="hotel-animate-rise mt-3 space-y-3">
               <p className="text-sm font-medium text-navy">
                 {requestTypeLabels[selectedType]}
               </p>
@@ -270,11 +274,12 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
               </div>
             </div>
           ) : (
-            <div className="mt-3 grid grid-cols-1 gap-2">
-              {requestButtons.map((button) => (
+            <div className="hotel-stagger mt-3 grid grid-cols-1 gap-2">
+              {requestButtons.map((button, index) => (
                 <button
                   key={button.type}
                   type="button"
+                  style={{ "--i": index } as CSSProperties}
                   onClick={() => setSelectedType(button.type)}
                   className="staff-mode-action flex items-center gap-3 text-left staff-mode-action-secondary"
                 >
@@ -286,6 +291,7 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
               ))}
               <button
                 type="button"
+                style={{ "--i": requestButtons.length } as CSSProperties}
                 onClick={() => setShowServices((v) => !v)}
                 className="staff-mode-action flex items-center gap-3 text-left staff-mode-action-secondary"
               >
@@ -299,12 +305,13 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
         </section>
 
         {showServices && (
-          <article className="hotel-card p-4 sm:p-5">
+          <article className="hotel-card hotel-animate-rise p-4 sm:p-5">
             <h2 className="hotel-label">Hotel info</h2>
-            <ul className="mt-3 space-y-2">
-              {hotelServices.map((service) => (
+            <ul className="hotel-stagger mt-3 space-y-2">
+              {hotelServices.map((service, index) => (
                 <li
                   key={service.label}
+                  style={{ "--i": index } as CSSProperties}
                   className="flex items-center justify-between gap-3 rounded-lg border border-border bg-cream px-3 py-2.5 text-sm"
                 >
                   <span className="font-medium text-navy">{service.label}</span>

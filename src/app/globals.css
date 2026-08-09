@@ -17,6 +17,15 @@
   --cream: #faf8f4;
   --muted: #6b7280;
   --shadow-color: 26 35 50;
+
+  /* Motion. Entrances use the quint curve so they decelerate late and feel
+     unhurried; exits are shorter because waiting on a dismissal feels broken. */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --motion-fast: 150ms;
+  --motion-base: 240ms;
+  --motion-slow: 340ms;
 }
 
 html[data-theme="dark"] {
@@ -70,10 +79,42 @@ html[data-theme="dark"] body {
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
   a:focus-visible,
   button:focus-visible {
     outline: 2px solid transparent;
     box-shadow: 0 0 0 3px rgba(184, 149, 106, 0.45);
+  }
+
+  /* Kills the grey flash and the 300ms tap delay on phones and tablets. */
+  a,
+  button,
+  select,
+  input,
+  textarea,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a,
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
+  /* Theme swaps shouldn't snap. Scoped so it never fights a real animation. */
+  body,
+  .hotel-card,
+  .hotel-stat,
+  .hotel-input {
+    transition:
+      background-color var(--motion-base) var(--ease-in-out-soft),
+      border-color var(--motion-base) var(--ease-in-out-soft),
+      color var(--motion-base) var(--ease-in-out-soft);
   }
 }
 
@@ -183,19 +224,10 @@ html[data-theme="dark"] body {
     }
   }
 
-  .hotel-btn:active {
-    transform: scale(0.98);
-  }
-
   .hotel-btn-primary {
     background-color: var(--navy-deep);
     color: #f8f6f2;
     border: 1px solid var(--navy-deep);
-  }
-
-  .hotel-btn-primary:hover {
-    background-color: #1e2d42;
-    box-shadow: 0 4px 12px rgba(15, 23, 36, 0.25);
   }
 
   html[data-theme="dark"] .hotel-btn-primary {
@@ -204,19 +236,10 @@ html[data-theme="dark"] body {
     border-color: var(--gold);
   }
 
-  html[data-theme="dark"] .hotel-btn-primary:hover {
-    background-color: #4a3f30;
-  }
-
   .hotel-btn-secondary {
     background-color: var(--surface);
     color: var(--navy);
     border: 1px solid var(--border);
-  }
-
-  .hotel-btn-secondary:hover {
-    border-color: var(--gold);
-    background-color: var(--cream);
   }
 
   .hotel-btn-gold {
@@ -226,8 +249,35 @@ html[data-theme="dark"] body {
     font-weight: 700;
   }
 
-  .hotel-btn-gold:hover {
-    box-shadow: 0 4px 16px rgba(184, 149, 106, 0.35);
+  /* Hover lift only where a real pointer exists, otherwise it sticks after a tap. */
+  @media (hover: hover) and (pointer: fine) {
+    .hotel-btn-primary:hover {
+      background-color: #1e2d42;
+      box-shadow: 0 4px 12px rgba(15, 23, 36, 0.25);
+      transform: translateY(-1px);
+    }
+
+    html[data-theme="dark"] .hotel-btn-primary:hover {
+      background-color: #4a3f30;
+    }
+
+    .hotel-btn-secondary:hover {
+      border-color: var(--gold);
+      background-color: var(--cream);
+      transform: translateY(-1px);
+    }
+
+    .hotel-btn-gold:hover {
+      box-shadow: 0 4px 16px rgba(184, 149, 106, 0.35);
+      transform: translateY(-1px);
+    }
+  }
+
+  /* Declared after the hover rules so a press always beats a hover lift. */
+  .hotel-btn:active,
+  .hotel-btn:active:hover {
+    transform: scale(0.97);
+    transition-duration: 80ms;
   }
 
   .hotel-nav-link {
@@ -240,13 +290,23 @@ html[data-theme="dark"] body {
     font-weight: 500;
     color: var(--muted);
     border: 1px solid transparent;
-    transition: all 180ms ease;
+    transition:
+      color var(--motion-fast) ease,
+      background-color var(--motion-fast) ease,
+      border-color var(--motion-fast) ease,
+      transform var(--motion-fast) var(--ease-out-soft);
   }
 
-  .hotel-nav-link:hover {
-    color: var(--navy);
-    background-color: var(--cream);
-    border-color: var(--border-subtle);
+  @media (hover: hover) and (pointer: fine) {
+    .hotel-nav-link:hover {
+      color: var(--navy);
+      background-color: var(--cream);
+      border-color: var(--border-subtle);
+    }
+  }
+
+  .hotel-nav-link:active {
+    transform: scale(0.96);
   }
 
   .hotel-nav-link-active {
@@ -408,6 +468,20 @@ html[data-theme="dark"] body {
     opacity: 1;
   }
 
+  /* Shows how long "Undo" stays available. */
+  .hotel-toast-timer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 100%;
+    transform-origin: left center;
+    border-radius: 9999px;
+    background-color: var(--gold);
+    opacity: 0.65;
+    animation: hotel-toast-countdown var(--toast-life, 6000ms) linear both;
+  }
+
   .staff-mode-card {
     font-size: 16px;
     line-height: 1.5;
@@ -421,7 +495,17 @@ html[data-theme="dark"] body {
     font-size: 15px;
     font-weight: 600;
     line-height: 1.25;
-    transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+    transition:
+      background-color var(--motion-fast) ease,
+      color var(--motion-fast) ease,
+      border-color var(--motion-fast) ease,
+      box-shadow var(--motion-fast) ease,
+      transform var(--motion-fast) var(--ease-out-soft);
+  }
+
+  .staff-mode-action:active:not(:disabled) {
+    transform: scale(0.98);
+    transition-duration: 80ms;
   }
 
   .staff-mode-action:focus-visible {
@@ -481,10 +565,12 @@ html[data-theme="dark"] body {
     }
   }
 
-  .hotel-feature-card:hover {
-    border-color: var(--gold);
-    box-shadow: 0 8px 24px rgba(var(--shadow-color), 0.08);
-    transform: translateY(-2px);
+  @media (hover: hover) and (pointer: fine) {
+    .hotel-feature-card:hover {
+      border-color: var(--gold);
+      box-shadow: 0 8px 24px rgba(var(--shadow-color), 0.08);
+      transform: translateY(-2px);
+    }
   }
 
   .hotel-feature-icon {
@@ -500,6 +586,266 @@ html[data-theme="dark"] body {
   }
 }
 
+/* ---------- Motion primitives ---------- */
+
+@keyframes hotel-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hotel-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes hotel-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+}
+
+@keyframes hotel-sheet-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 100%, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes hotel-sheet-down {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+@keyframes hotel-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes hotel-pop-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+@keyframes hotel-toast-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 140%, 0) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes hotel-toast-exit {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, 140%, 0) scale(0.94);
+  }
+}
+
+@keyframes hotel-toast-countdown {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@layer components {
+  .hotel-animate-fade {
+    animation: hotel-fade-in var(--motion-base) var(--ease-out-soft) both;
+  }
+
+  .hotel-animate-rise {
+    animation: hotel-rise var(--motion-base) var(--ease-out-soft) both;
+  }
+
+  .hotel-animate-pop {
+    animation: hotel-pop var(--motion-base) var(--ease-spring) both;
+  }
+
+  .hotel-animate-sheet {
+    animation: hotel-sheet-up var(--motion-slow) var(--ease-out-soft) both;
+  }
+
+  .hotel-animate-sheet-out {
+    animation: hotel-sheet-down var(--motion-fast) var(--ease-in-out-soft) both;
+  }
+
+  .hotel-animate-fade-out {
+    animation: hotel-fade-out var(--motion-fast) ease both;
+  }
+
+  .hotel-animate-pop-out {
+    animation: hotel-pop-out var(--motion-fast) var(--ease-in-out-soft) both;
+  }
+
+  /* Replays on every route change because each page mounts its own shell.
+     Fill is backwards, not both: a lingering transform would turn <main> into
+     the containing block for the fixed-position modals inside it. */
+  .hotel-page-enter {
+    animation: hotel-rise 260ms var(--ease-out-soft) backwards;
+  }
+
+  .hotel-animate-toast-in {
+    animation: hotel-toast-enter var(--motion-slow) var(--ease-spring) both;
+  }
+
+  .hotel-animate-toast-out {
+    animation: hotel-toast-exit var(--motion-fast) var(--ease-in-out-soft) both;
+  }
+
+  @media (min-width: 640px) {
+    /* On a desktop the modal is centred, so it should scale in, not slide up. */
+    .hotel-animate-sheet {
+      animation-name: hotel-pop;
+      animation-duration: var(--motion-base);
+      animation-timing-function: var(--ease-spring);
+    }
+
+    .hotel-animate-sheet-out {
+      animation-name: hotel-pop-out;
+    }
+  }
+
+  /* Children fade in one after another. Set --i on each child.
+     Fill is backwards so the finished animation stops pinning transform and
+     the cards keep their own hover-lift and press-scale. */
+  .hotel-stagger > * {
+    animation: hotel-rise var(--motion-base) var(--ease-out-soft) backwards;
+    animation-delay: calc(var(--i, 0) * var(--stagger-step, 45ms));
+  }
+
+  /* Inside a collapse the children are always mounted, so hold the animation
+     back until it opens — otherwise it burns off invisibly on page load. */
+  .hotel-collapse .hotel-stagger > * {
+    animation: none;
+  }
+
+  .hotel-collapse[data-open="true"] .hotel-stagger > * {
+    animation: hotel-rise var(--motion-base) var(--ease-out-soft) backwards;
+    animation-delay: calc(var(--i, 0) * var(--stagger-step, 45ms));
+  }
+
+  /* Animates to auto height without measuring anything in JS. */
+  .hotel-collapse {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      grid-template-rows var(--motion-slow) var(--ease-out-soft),
+      opacity var(--motion-fast) ease,
+      visibility 0s linear var(--motion-slow);
+  }
+
+  .hotel-collapse > * {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .hotel-collapse[data-open="true"] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    visibility: visible;
+    transition:
+      grid-template-rows var(--motion-slow) var(--ease-out-soft),
+      opacity var(--motion-base) ease,
+      visibility 0s;
+  }
+
+  /* Three bars that fold into an X. */
+  .hotel-burger {
+    position: relative;
+    display: block;
+    height: 12px;
+    width: 18px;
+    flex-shrink: 0;
+  }
+
+  .hotel-burger span {
+    position: absolute;
+    left: 0;
+    display: block;
+    height: 2px;
+    width: 100%;
+    border-radius: 9999px;
+    background-color: currentColor;
+    transition:
+      top var(--motion-base) var(--ease-out-soft),
+      transform var(--motion-base) var(--ease-out-soft),
+      opacity var(--motion-fast) ease;
+  }
+
+  .hotel-burger span:nth-child(1) {
+    top: 0;
+  }
+
+  .hotel-burger span:nth-child(2) {
+    top: 5px;
+  }
+
+  .hotel-burger span:nth-child(3) {
+    top: 10px;
+  }
+
+  [data-open="true"] .hotel-burger span:nth-child(1) {
+    top: 5px;
+    transform: rotate(45deg);
+  }
+
+  [data-open="true"] .hotel-burger span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0.3);
+  }
+
+  [data-open="true"] .hotel-burger span:nth-child(3) {
+    top: 5px;
+    transform: rotate(-45deg);
+  }
+}
+
 @media print {
   .hotel-page {
     background: white !important;
@@ -508,5 +854,17 @@ html[data-theme="dark"] body {
   header,
   .print\:hidden {
     display: none !important;
+  }
+}
+
+/* Last word in the file so it overrides every animation above. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

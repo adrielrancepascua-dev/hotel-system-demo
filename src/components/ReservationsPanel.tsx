@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 
 import { CheckInModal } from "@/components/CheckInModal";
@@ -114,32 +114,44 @@ export function ReservationsPanel() {
             </p>
           )}
 
-          {pickingRoom && readyRooms.length > 0 && (
-            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-              {readyRooms.map((room) => {
-                const type = getRoomType(room, state.roomTypes);
-                return (
-                  <button
-                    key={room.id}
-                    type="button"
-                    className="rounded-xl border border-border bg-surface px-3 py-3 text-left transition hover:border-gold/60 hover:bg-cream"
-                    onClick={() => {
-                      setBookingRoomId(room.id);
-                      setPickingRoom(false);
-                    }}
-                  >
-                    <p className="hotel-label truncate text-muted">
-                      {type?.name ?? "Room"}
-                    </p>
-                    <p className="font-display text-2xl font-semibold text-navy">
-                      {room.room_number}
-                    </p>
-                    <p className="mt-1 text-xs text-muted">
-                      {formatMoney(type?.base_rate ?? 0)}/night
-                    </p>
-                  </button>
-                );
-              })}
+          {readyRooms.length > 0 && (
+            <div
+              className="hotel-collapse"
+              data-open={pickingRoom}
+              inert={!pickingRoom}
+            >
+              <div>
+                <div
+                  style={{ "--stagger-step": "30ms" } as CSSProperties}
+                  className="hotel-stagger mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4"
+                >
+                  {readyRooms.map((room, index) => {
+                    const type = getRoomType(room, state.roomTypes);
+                    return (
+                      <button
+                        key={room.id}
+                        type="button"
+                        style={{ "--i": index } as CSSProperties}
+                        className="rounded-xl border border-border bg-surface px-3 py-3 text-left transition-[transform,border-color,background-color] duration-200 ease-out active:scale-[0.97] [@media(hover:hover)]:hover:border-gold/60 [@media(hover:hover)]:hover:bg-cream"
+                        onClick={() => {
+                          setBookingRoomId(room.id);
+                          setPickingRoom(false);
+                        }}
+                      >
+                        <p className="hotel-label truncate text-muted">
+                          {type?.name ?? "Room"}
+                        </p>
+                        <p className="font-display text-2xl font-semibold text-navy">
+                          {room.room_number}
+                        </p>
+                        <p className="mt-1 text-xs text-muted">
+                          {formatMoney(type?.base_rate ?? 0)}/night
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
         </div>

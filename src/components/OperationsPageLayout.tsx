@@ -19,7 +19,7 @@ export function OperationsPageLayout({
   return (
     <div className="hotel-page">
       <AppHeader />
-      <main id="main-content">
+      <main id="main-content" className="hotel-page-enter">
         <section
           className={`mx-auto w-full px-3 pt-3 sm:px-6 sm:pt-5 ${maxWidthClass}`}
         >

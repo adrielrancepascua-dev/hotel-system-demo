@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type ReactNode,
 } from "react";
 
@@ -34,27 +35,55 @@ type ToastContextValue = {
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 const VISIBLE_MS = 6000;
+/** Matches --motion-fast so the node leaves the DOM as the animation lands. */
+const EXIT_MS = 160;
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<ToastEntry | null>(null);
+  const [isLeaving, setIsLeaving] = useState(false);
   const counter = useRef(0);
+  const exitTimer = useRef<number | null>(null);
 
-  const notify = useCallback((message: string, options?: NotifyOptions) => {
-    counter.current += 1;
-    setToast({
-      id: counter.current,
-      message,
-      tone: options?.tone ?? "success",
-      undoLabel: options?.undoLabel ?? "Undo",
-      onUndo: options?.onUndo,
-    });
+  const clearExitTimer = useCallback(() => {
+    if (exitTimer.current !== null) {
+      window.clearTimeout(exitTimer.current);
+      exitTimer.current = null;
+    }
   }, []);
 
+  const dismiss = useCallback(() => {
+    clearExitTimer();
+    setIsLeaving(true);
+    exitTimer.current = window.setTimeout(() => {
+      setToast(null);
+      setIsLeaving(false);
+      exitTimer.current = null;
+    }, EXIT_MS);
+  }, [clearExitTimer]);
+
+  const notify = useCallback(
+    (message: string, options?: NotifyOptions) => {
+      clearExitTimer();
+      counter.current += 1;
+      setIsLeaving(false);
+      setToast({
+        id: counter.current,
+        message,
+        tone: options?.tone ?? "success",
+        undoLabel: options?.undoLabel ?? "Undo",
+        onUndo: options?.onUndo,
+      });
+    },
+    [clearExitTimer],
+  );
+
   useEffect(() => {
-    if (!toast) return;
-    const timer = window.setTimeout(() => setToast(null), VISIBLE_MS);
+    if (!toast || isLeaving) return;
+    const timer = window.setTimeout(dismiss, VISIBLE_MS);
     return () => window.clearTimeout(timer);
-  }, [toast]);
+  }, [toast, isLeaving, dismiss]);
+
+  useEffect(() => clearExitTimer, [clearExitTimer]);
 
   const value = useMemo<ToastContextValue>(() => ({ notify }), [notify]);
 
@@ -69,9 +98,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toast && (
           <div
             key={toast.id}
-            className={`hotel-toast pointer-events-auto flex w-full max-w-md items-center gap-3 ${
+            className={`hotel-toast pointer-events-auto relative flex w-full max-w-md items-center gap-3 overflow-hidden ${
               toast.tone === "error" ? "hotel-toast-error" : "hotel-toast-success"
-            }`}
+            } ${isLeaving ? "hotel-animate-toast-out" : "hotel-animate-toast-in"}`}
           >
             <p className="min-w-0 flex-1 text-sm font-medium">{toast.message}</p>
             {toast.onUndo && (
@@ -80,7 +109,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 className="hotel-toast-action"
                 onClick={() => {
                   toast.onUndo?.();
-                  setToast(null);
+                  dismiss();
                 }}
               >
                 {toast.undoLabel}
@@ -88,12 +117,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             )}
             <button
               type="button"
-              onClick={() => setToast(null)}
+              onClick={dismiss}
               aria-label="Close message"
               className="hotel-toast-close"
             >
               ✕
             </button>
+            {!isLeaving && (
+              <span
+                aria-hidden="true"
+                style={{ "--toast-life": `${VISIBLE_MS}ms` } as CSSProperties}
+                className="hotel-toast-timer"
+              />
+            )}
           </div>
         )}
       </div>

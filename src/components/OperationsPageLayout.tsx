@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
 
-import { AppHeader } from "@/components/AppHeader";
-
 interface OperationsPageLayoutProps {
   subtitle: string;
   maxWidthClass?: string;
@@ -9,7 +7,7 @@ interface OperationsPageLayoutProps {
   topSlot?: ReactNode;
 }
 
-/** Every staff screen uses this shell so the app feels like one tool. */
+/** Content shell for staff screens. Header lives in `(staff)/layout.tsx`. */
 export function OperationsPageLayout({
   subtitle,
   maxWidthClass = "max-w-6xl",
@@ -17,17 +15,14 @@ export function OperationsPageLayout({
   topSlot,
 }: OperationsPageLayoutProps) {
   return (
-    <div className="hotel-page">
-      <AppHeader />
-      <main id="main-content" className="hotel-page-enter">
-        <section
-          className={`mx-auto w-full px-3 pt-3 sm:px-6 sm:pt-5 ${maxWidthClass}`}
-        >
-          <p className="text-sm leading-relaxed text-muted">{subtitle}</p>
-          {topSlot}
-        </section>
-        {children}
-      </main>
-    </div>
+    <main id="main-content" className="hotel-page-enter">
+      <section
+        className={`mx-auto w-full px-3 pt-3 sm:px-6 sm:pt-5 ${maxWidthClass}`}
+      >
+        <p className="text-sm leading-relaxed text-muted">{subtitle}</p>
+        {topSlot}
+      </section>
+      {children}
+    </main>
   );
 }

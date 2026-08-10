@@ -3,7 +3,6 @@
 import { use } from "react";
 import Link from "next/link";
 
-import { AppHeader } from "@/components/AppHeader";
 import { paymentMethodLabels } from "@/lib/constants";
 import { formatMoney } from "@/lib/demo";
 import { folioBalance } from "@/lib/metrics";
@@ -32,9 +31,10 @@ export default function FolioReceiptPage({
   const totalPaid = payments.reduce((s, p) => s + p.amount, 0);
 
   return (
-    <div className="hotel-page">
-      <AppHeader />
-      <main id="main-content" className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
+    <main
+      id="main-content"
+      className="hotel-page-enter mx-auto w-full max-w-2xl px-4 py-8 sm:px-6"
+    >
         {!hydrated ? (
           <p className="text-sm text-muted">Loading receipt…</p>
         ) : !folio || !reservation ? (
@@ -140,7 +140,6 @@ export default function FolioReceiptPage({
             </div>
           </article>
         )}
-      </main>
-    </div>
+    </main>
   );
 }

@@ -167,8 +167,11 @@ export function ReservationsPanel() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
-          {reservations.map((reservation) => {
+        <div
+          style={{ "--stagger-step": "20ms" } as CSSProperties}
+          className="hotel-stagger grid gap-3 sm:gap-4 md:grid-cols-2"
+        >
+          {reservations.map((reservation, index) => {
             const room = state.rooms.find((r) => r.id === reservation.room_id);
             const folio = getFolioForReservation(reservation.id, state.folios);
             const balance = folio
@@ -178,6 +181,7 @@ export function ReservationsPanel() {
             return (
               <article
                 key={reservation.id}
+                style={{ "--i": index } as CSSProperties}
                 className="hotel-card hotel-card-accent p-4 sm:p-5"
               >
                 <div className="flex items-start justify-between gap-3">

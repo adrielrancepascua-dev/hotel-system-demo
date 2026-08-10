@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 import { useToast } from "@/components/Toast";
 import { reservationSourceLabels, roomStatusLabels } from "@/lib/constants";
 import { formatMoney } from "@/lib/demo";
@@ -51,9 +53,16 @@ export function ReportsPanel() {
 
   return (
     <section className="mx-auto w-full max-w-6xl px-3 py-3 sm:px-6 sm:py-5">
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3">
-        {cards.map((card) => (
-          <article key={card.label} className="hotel-stat hotel-card-accent min-w-0">
+      <div
+        style={{ "--stagger-step": "20ms" } as CSSProperties}
+        className="hotel-stagger grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3"
+      >
+        {cards.map((card, index) => (
+          <article
+            key={card.label}
+            style={{ "--i": index } as CSSProperties}
+            className="hotel-stat hotel-card-accent min-w-0"
+          >
             <p className="hotel-label">{card.label}</p>
             <p className="hotel-stat-value mt-1 sm:mt-2">{card.value}</p>
             <p className="mt-1 text-[0.6875rem] text-muted sm:text-xs">{card.hint}</p>

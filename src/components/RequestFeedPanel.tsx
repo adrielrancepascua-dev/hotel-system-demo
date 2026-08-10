@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 
 import { useToast } from "@/components/Toast";
 import {
@@ -68,13 +68,17 @@ export function RequestFeedPanel() {
           <p className="mt-2 text-sm text-muted">Nothing waiting right now.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
-          {visible.map((request) => {
+        <div
+          style={{ "--stagger-step": "20ms" } as CSSProperties}
+          className="hotel-stagger grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2"
+        >
+          {visible.map((request, index) => {
             const staff = state.staff.find((s) => s.id === request.completed_by_staff_id);
             return (
               <article
                 key={request.id}
-                className={`hotel-card hotel-card-accent staff-mode-card p-4 transition sm:p-5 ${
+                style={{ "--i": index } as CSSProperties}
+                className={`hotel-card hotel-card-accent staff-mode-card p-4 sm:p-5 ${
                   request.status === "pending" ? "border-gold/30" : "opacity-80"
                 }`}
               >

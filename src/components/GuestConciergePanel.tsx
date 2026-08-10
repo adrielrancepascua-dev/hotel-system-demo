@@ -274,12 +274,11 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
               </div>
             </div>
           ) : (
-            <div className="hotel-stagger mt-3 grid grid-cols-1 gap-2">
-              {requestButtons.map((button, index) => (
+            <div className="mt-3 grid grid-cols-1 gap-2">
+              {requestButtons.map((button) => (
                 <button
                   key={button.type}
                   type="button"
-                  style={{ "--i": index } as CSSProperties}
                   onClick={() => setSelectedType(button.type)}
                   className="staff-mode-action flex items-center gap-3 text-left staff-mode-action-secondary"
                 >
@@ -291,7 +290,6 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
               ))}
               <button
                 type="button"
-                style={{ "--i": requestButtons.length } as CSSProperties}
                 onClick={() => setShowServices((v) => !v)}
                 className="staff-mode-action flex items-center gap-3 text-left staff-mode-action-secondary"
               >

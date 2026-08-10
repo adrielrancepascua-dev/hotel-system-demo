@@ -807,7 +807,7 @@ export function UnifiedOpsBoard() {
         </aside>
 
         <div
-          style={{ "--stagger-step": "25ms" } as CSSProperties}
+          style={{ "--stagger-step": "20ms" } as CSSProperties}
           className={`hotel-stagger order-2 grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:order-1 xl:grid-cols-4 ${
             roomSelected ? "hidden lg:grid" : ""
           }`}
@@ -860,7 +860,7 @@ export function UnifiedOpsBoard() {
                   aria-label={`Room ${room.room_number}, ${type?.name ?? "room"}, ${
                     held ? "saved for a booking" : theme.label
                   }`}
-                  className={`staff-mode-card min-h-24 w-full rounded-xl border p-2.5 text-left shadow-sm transition-[transform,box-shadow,border-color,background-color] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 active:scale-[0.97] sm:min-h-32 sm:p-4 [@media(hover:hover)]:hover:-translate-y-0.5 [@media(hover:hover)]:hover:shadow-md ${theme.card} ${
+                  className={`staff-mode-card min-h-24 w-full rounded-xl border p-2.5 text-left shadow-sm transition-[border-color,box-shadow] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 active:opacity-90 sm:min-h-32 sm:p-4 [@media(hover:hover)]:hover:border-gold/50 [@media(hover:hover)]:hover:shadow-md ${theme.card} ${
                     isSelected ? "shadow-md ring-2 ring-gold/60" : ""
                   }`}
                 >

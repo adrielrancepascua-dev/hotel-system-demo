@@ -111,7 +111,7 @@ export function CheckInModal({
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-end justify-center bg-navy-deep/50 p-3 backdrop-blur-[3px] sm:items-center sm:p-4 ${
+      className={`fixed inset-0 z-50 flex items-end justify-center bg-navy-deep/50 p-3 sm:items-center sm:p-4 ${
         isClosing ? "hotel-animate-fade-out" : "hotel-animate-fade"
       }`}
       role="dialog"

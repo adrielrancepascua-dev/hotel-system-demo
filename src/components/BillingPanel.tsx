@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 
 import { useToast } from "@/components/Toast";
@@ -73,11 +73,14 @@ export function BillingPanel() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)]">
-        <div className="flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-2 lg:overflow-visible lg:pb-0">
+        <div
+          style={{ "--stagger-step": "20ms" } as CSSProperties}
+          className="hotel-stagger flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-2 lg:overflow-visible lg:pb-0"
+        >
           {folios.length === 0 ? (
             <p className="text-sm text-muted">No bills in this filter.</p>
           ) : (
-            folios.map((folio) => {
+            folios.map((folio, index) => {
               const res = state.reservations.find((r) => r.id === folio.reservation_id);
               const bal = folioBalance(folio.id, state.charges, state.payments);
               const active = (selected?.id ?? null) === folio.id;
@@ -85,11 +88,12 @@ export function BillingPanel() {
                 <button
                   key={folio.id}
                   type="button"
+                  style={{ "--i": index } as CSSProperties}
                   onClick={() => setSelectedFolioId(folio.id)}
-                  className={`min-w-[11rem] shrink-0 rounded-xl border p-3 text-left transition lg:min-w-0 lg:w-full ${
+                  className={`min-w-[11rem] shrink-0 rounded-xl border p-3 text-left transition-[border-color,background-color] duration-150 lg:min-w-0 lg:w-full ${
                     active
                       ? "border-gold bg-gold-muted/40"
-                      : "border-border bg-surface-elevated hover:border-gold/50"
+                      : "border-border bg-surface-elevated [@media(hover:hover)]:hover:border-gold/50"
                   }`}
                 >
                   <p className="truncate font-medium text-navy">{res?.guest_name ?? "Guest"}</p>
@@ -104,7 +108,10 @@ export function BillingPanel() {
         </div>
 
         {selected && reservation ? (
-          <div className="hotel-card hotel-card-accent p-5">
+          <div
+            key={selected.id}
+            className="hotel-card hotel-card-accent hotel-animate-fade p-5"
+          >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="hotel-label text-gold">Bill #{selected.id}</p>

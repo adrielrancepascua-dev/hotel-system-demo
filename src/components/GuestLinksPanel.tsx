@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 
 import { useToast } from "@/components/Toast";
@@ -52,13 +52,17 @@ export function GuestLinksPanel() {
         className="hotel-input mb-4"
       />
 
-      <div className="grid gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
-        {rooms.map((room) => {
+      <div
+        style={{ "--stagger-step": "18ms" } as CSSProperties}
+        className="hotel-stagger grid gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3"
+      >
+        {rooms.map((room, index) => {
           const type = getRoomType(room, state.roomTypes);
           const theme = roomStatusStyles[room.status];
           return (
             <article
               key={room.id}
+              style={{ "--i": index } as CSSProperties}
               className="hotel-card flex items-center justify-between gap-3 p-3 sm:p-4"
             >
               <div className="min-w-0">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -78,21 +78,18 @@ export function AppHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-border bg-surface-elevated/90 backdrop-blur-md print:hidden">
+      <header className="sticky top-0 z-40 border-b border-border bg-surface-elevated/95 print:hidden">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3.5">
           <Link
             href="/ops"
-            className="group flex min-w-0 items-center gap-2 transition-transform duration-200 ease-out active:scale-[0.98] sm:gap-3"
+            className="flex min-w-0 items-center gap-2 active:opacity-80 sm:gap-3"
           >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy-deep text-gold shadow-sm transition-transform duration-300 ease-out group-hover:rotate-[-6deg] group-hover:scale-105 sm:h-10 sm:w-10">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy-deep text-gold shadow-sm sm:h-10 sm:w-10">
               <HotelIcon className="h-5 w-5" />
             </div>
             <div className="min-w-0">
               <p className="hotel-label text-gold">Demo Hotel</p>
-              <h1
-                key={pageTitle}
-                className="hotel-animate-rise font-display truncate text-lg font-semibold leading-tight text-navy md:text-xl"
-              >
+              <h1 className="font-display truncate text-lg font-semibold leading-tight text-navy md:text-xl">
                 {pageTitle}
               </h1>
             </div>
@@ -138,7 +135,7 @@ export function AppHeader() {
               </Link>
             ))}
             <StaffShiftPicker />
-            <ThemeToggle />
+            <ThemeToggle className="min-w-[6.5rem]" />
           </nav>
         </div>
 
@@ -151,12 +148,11 @@ export function AppHeader() {
         >
           <div>
             <div className="border-t border-border px-3 py-3 sm:px-4">
-              <div className="hotel-stagger mx-auto grid w-full max-w-6xl grid-cols-2 gap-2">
-                {links.map((link, index) => (
+              <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-2">
+                {links.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    style={{ "--i": index } as CSSProperties}
                     aria-current={isActive(link.href) ? "page" : undefined}
                     className={`hotel-btn w-full justify-center text-center ${
                       isActive(link.href) ? "hotel-btn-gold" : "hotel-btn-secondary"
@@ -166,12 +162,10 @@ export function AppHeader() {
                     {badgeFor(link.href)}
                   </Link>
                 ))}
-                <div
-                  style={{ "--i": links.length } as CSSProperties}
-                  className="col-span-2 flex flex-col gap-2 sm:flex-row"
-                >
+                {/* Keep desk/theme controls outside stagger so the toggle never slides. */}
+                <div className="col-span-2 flex flex-col gap-2 sm:flex-row">
                   <StaffShiftPicker className="w-full flex-1 justify-between rounded-lg border border-border px-3 py-2" />
-                  <ThemeToggle className="w-full justify-center sm:w-auto" />
+                  <ThemeToggle className="w-full justify-center sm:min-w-[6.5rem] sm:w-auto" />
                 </div>
               </div>
             </div>
@@ -182,7 +176,7 @@ export function AppHeader() {
       <div
         aria-hidden="true"
         onClick={() => setIsMenuOpen(false)}
-        className={`fixed inset-0 z-30 bg-navy-deep/25 backdrop-blur-[2px] transition-opacity duration-300 ease-out lg:hidden print:hidden ${
+        className={`fixed inset-0 z-30 bg-navy-deep/40 transition-opacity duration-200 ease-out lg:hidden print:hidden ${
           isMenuOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       />

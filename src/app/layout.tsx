@@ -1,17 +1,13 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Geist, Geist_Mono } from "next/font/google";
+import { Cormorant_Garamond, IBM_Plex_Sans } from "next/font/google";
 
 import { Providers } from "@/components/Providers";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const plexSans = IBM_Plex_Sans({
+  variable: "--font-ibm-plex-sans",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const cormorant = Cormorant_Garamond({
@@ -23,7 +19,7 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   title: "Demo Hotel | Front Desk",
   description:
-    "Front desk hotel operations — rooms, check-in, bills, and guest requests. Sample Philippine hotel data; works offline in your browser.",
+    "Front desk hotel operations: rooms, check-in, bills, and guest requests. Sample Philippine hotel data; works offline in your browser.",
 };
 
 export default function RootLayout({
@@ -35,7 +31,7 @@ export default function RootLayout({
     <html
       lang="en-PH"
       data-scroll-behavior="smooth"
-      className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} h-full antialiased`}
+      className={`${plexSans.variable} ${cormorant.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <a

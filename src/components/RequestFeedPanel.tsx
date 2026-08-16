@@ -3,6 +3,7 @@
 import { useMemo, useState, type CSSProperties } from "react";
 
 import { useToast } from "@/components/Toast";
+import { PanelSkeleton } from "@/components/PanelSkeleton";
 import {
   requestStatusLabels,
   requestStatusStyles,
@@ -27,7 +28,7 @@ export function RequestFeedPanel() {
   const visible = showDone ? requests : requests.filter((r) => r.status === "pending");
 
   if (!hydrated) {
-    return <p className="px-4 text-sm text-muted sm:px-6">Loading requests…</p>;
+    return <PanelSkeleton label="Loading requests" />;
   }
 
   return (

@@ -4,6 +4,7 @@ import { useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 
 import { CheckInModal } from "@/components/CheckInModal";
+import { PanelSkeleton } from "@/components/PanelSkeleton";
 import { useToast } from "@/components/Toast";
 import { reservationSourceLabels, reservationStatusLabels } from "@/lib/constants";
 import { formatMoney } from "@/lib/demo";
@@ -52,7 +53,7 @@ export function ReservationsPanel() {
   }, [state.reservations, state.rooms, filter, query]);
 
   if (!hydrated) {
-    return <p className="px-4 text-sm text-muted sm:px-6">Loading bookings…</p>;
+    return <PanelSkeleton label="Loading bookings" />;
   }
 
   return (
@@ -132,7 +133,7 @@ export function ReservationsPanel() {
                         key={room.id}
                         type="button"
                         style={{ "--i": index } as CSSProperties}
-                        className="rounded-xl border border-border bg-surface px-3 py-3 text-left transition-[transform,border-color,background-color] duration-200 ease-out active:scale-[0.97] [@media(hover:hover)]:hover:border-gold/60 [@media(hover:hover)]:hover:bg-cream"
+                        className="rounded-md border border-border bg-surface px-3 py-3 text-left transition-[border-color,background-color] duration-150 [@media(hover:hover)]:hover:border-gold/60 [@media(hover:hover)]:hover:bg-cream"
                         onClick={() => {
                           setBookingRoomId(room.id);
                           setPickingRoom(false);
@@ -223,7 +224,7 @@ export function ReservationsPanel() {
                         notify(
                           ok
                             ? `${reservation.guest_name} checked in · Room ${room.room_number}`
-                            : "Could not check in — room must be Ready.",
+                            : "Could not check in. Room must be Ready.",
                           { tone: ok ? "success" : "error" },
                         );
                       }}

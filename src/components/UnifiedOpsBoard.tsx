@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 
 import { CheckInModal } from "@/components/CheckInModal";
+import { PanelSkeleton } from "@/components/PanelSkeleton";
 import { useToast } from "@/components/Toast";
 import {
   paymentMethodLabels,
@@ -202,7 +203,7 @@ export function UnifiedOpsBoard() {
     const roomNumber = selectedRoom.room_number;
     checkOutGuest(selectedRoom.id, closeTheBill);
     setShowCharge(false);
-    notify(`Room ${roomNumber} checked out. It is now Dirty — tell housekeeping.`);
+    notify(`Room ${roomNumber} checked out. It is now Dirty. Tell housekeeping.`);
     clearRoomPanel();
   }
 
@@ -217,11 +218,7 @@ export function UnifiedOpsBoard() {
   }
 
   if (!hydrated) {
-    return (
-      <section className="mx-auto w-full max-w-6xl px-3 py-4 sm:px-6">
-        <p className="text-sm text-muted">Loading front desk…</p>
-      </section>
-    );
+    return <PanelSkeleton label="Loading front desk" />;
   }
 
   const roomSelected = selectedRoom != null;
@@ -457,7 +454,7 @@ export function UnifiedOpsBoard() {
                               );
                               clearRoomPanel();
                             } else {
-                              notify("Could not check in — room must be Ready.", {
+                              notify("Could not check in. Room must be Ready.", {
                                 tone: "error",
                               });
                             }
@@ -609,7 +606,7 @@ export function UnifiedOpsBoard() {
                         )
                       }
                     >
-                      Fixed — ready to sell
+                      Ready to sell
                     </button>
                     <button
                       type="button"
@@ -748,7 +745,7 @@ export function UnifiedOpsBoard() {
                         finishCheckout(true);
                       }}
                     >
-                      Fully paid — check out
+                      Check out now
                     </button>
                   )}
                   <button
@@ -860,8 +857,8 @@ export function UnifiedOpsBoard() {
                   aria-label={`Room ${room.room_number}, ${type?.name ?? "room"}, ${
                     held ? "saved for a booking" : theme.label
                   }`}
-                  className={`staff-mode-card min-h-24 w-full rounded-xl border p-2.5 text-left shadow-sm transition-[border-color,box-shadow] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 active:opacity-90 sm:min-h-32 sm:p-4 [@media(hover:hover)]:hover:border-gold/50 [@media(hover:hover)]:hover:shadow-md ${theme.card} ${
-                    isSelected ? "shadow-md ring-2 ring-gold/60" : ""
+                  className={`staff-mode-card min-h-24 w-full rounded-md border p-2.5 text-left transition-[border-color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 active:opacity-90 sm:min-h-32 sm:p-4 [@media(hover:hover)]:hover:border-gold/50 ${theme.card} ${
+                    isSelected ? "ring-2 ring-gold/60" : ""
                   }`}
                 >
                   <div className="flex items-start justify-between gap-1">

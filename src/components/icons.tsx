@@ -20,30 +20,6 @@ export function HotelIcon({ className = "h-5 w-5" }: IconProps) {
   );
 }
 
-export function DashboardIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3" y="3" width="7" height="9" rx="1" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="14" y="3" width="7" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="14" y="12" width="7" height="9" rx="1" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="3" y="16" width="7" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
-}
-
-export function ConciergeIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M12 2l2.4 4.8 5.4.8-3.9 3.8.9 5.4L12 14.8 7.2 17l.9-5.4L4.2 7.6l5.4-.8L12 2z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export function BellIcon({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -59,41 +35,72 @@ export function BellIcon({ className = "h-5 w-5" }: IconProps) {
   );
 }
 
-export function SparkleIcon({ className = "h-5 w-5" }: IconProps) {
+export function TowelIcon({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
-        d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"
+        d="M6 4h10a3 3 0 010 6H8a2 2 0 000 4h9v6H7a3 3 0 01-3-3V7a3 3 0 013-3z"
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
-      />
-      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
-}
-
-export function KeyIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="8" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M12 8h9M17 8v3M20 8v2"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
 }
 
-export function QrIcon({ className = "h-5 w-5" }: IconProps) {
+export function BroomIcon({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M14 14h2v2h-2zM18 14h3v3h-3zM14 18h2v3h-2zM18 21h3" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M14 3l7 7M4 21l8.5-8.5M12 8l4 4M4.5 16.5L9 21h8l-6-6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function ClockIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M12 7v5l3.5 2"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function UtensilsIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M8 3v7M6 3v4a2 2 0 004 0V3M10 3v7M8 10v11M16 3v9a2 2 0 002 2v7"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function DoorIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16H5z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path d="M14 12h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }

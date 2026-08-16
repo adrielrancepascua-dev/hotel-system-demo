@@ -4,6 +4,7 @@ import { useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 
 import { useToast } from "@/components/Toast";
+import { PanelSkeleton } from "@/components/PanelSkeleton";
 import { formatMoney } from "@/lib/demo";
 import { folioBalance } from "@/lib/metrics";
 import { useDemoStore } from "@/lib/store/DemoStore";
@@ -49,7 +50,7 @@ export function BillingPanel() {
     : 0;
 
   if (!hydrated) {
-    return <p className="px-4 text-sm text-muted sm:px-6">Loading bills…</p>;
+    return <PanelSkeleton label="Loading bills" />;
   }
 
   return (
@@ -90,7 +91,7 @@ export function BillingPanel() {
                   type="button"
                   style={{ "--i": index } as CSSProperties}
                   onClick={() => setSelectedFolioId(folio.id)}
-                  className={`min-w-[11rem] shrink-0 rounded-xl border p-3 text-left transition-[border-color,background-color] duration-150 lg:min-w-0 lg:w-full ${
+                  className={`min-w-[11rem] shrink-0 rounded-md border p-3 text-left transition-[border-color,background-color] duration-150 lg:min-w-0 lg:w-full ${
                     active
                       ? "border-gold bg-gold-muted/40"
                       : "border-border bg-surface-elevated [@media(hover:hover)]:hover:border-gold/50"

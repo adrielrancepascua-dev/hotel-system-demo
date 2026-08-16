@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 
-import { ConciergeIcon, HotelIcon } from "@/components/icons";
+import { PanelSkeleton } from "@/components/PanelSkeleton";
+import { BellIcon, BroomIcon, ClockIcon, DoorIcon, HotelIcon, TowelIcon, UtensilsIcon } from "@/components/icons";
 import { paymentMethodLabels, requestTypeLabels } from "@/lib/constants";
 import { formatMoney } from "@/lib/demo";
 import {
@@ -13,12 +14,12 @@ import {
 import { useDemoStore } from "@/lib/store/DemoStore";
 import type { RequestType } from "@/lib/types";
 
-const requestButtons: Array<{ type: RequestType; label: string; emoji: string }> = [
-  { type: "towels", label: "Extra towels", emoji: "🛁" },
-  { type: "housekeeping", label: "Room tidy-up", emoji: "✨" },
-  { type: "late_checkout", label: "Late checkout", emoji: "🕐" },
-  { type: "food", label: "Order food", emoji: "🍽️" },
-  { type: "digital_checkout", label: "Request checkout", emoji: "🚪" },
+const requestButtons = [
+  { type: "towels" as const, label: "Extra towels", Icon: TowelIcon },
+  { type: "housekeeping" as const, label: "Room tidy-up", Icon: BroomIcon },
+  { type: "late_checkout" as const, label: "Late checkout", Icon: ClockIcon },
+  { type: "food" as const, label: "Order food", Icon: UtensilsIcon },
+  { type: "digital_checkout" as const, label: "Request checkout", Icon: DoorIcon },
 ];
 
 const hotelServices = [
@@ -105,8 +106,8 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
 
   if (!hydrated) {
     return (
-      <div className="hotel-page flex min-h-screen items-center justify-center">
-        <p className="text-sm text-muted">Loading…</p>
+      <div className="hotel-page px-4 py-8">
+        <PanelSkeleton label="Loading guest page" />
       </div>
     );
   }
@@ -133,7 +134,7 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
         <header className="hotel-hero px-5 py-6 sm:py-7">
           <div className="relative z-10">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-gold backdrop-blur">
+              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white/10 text-gold">
                 <HotelIcon className="h-5 w-5" />
               </div>
               <div>
@@ -218,7 +219,7 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
 
         <section className="hotel-card hotel-card-accent p-4">
           <div className="flex items-center gap-2">
-            <ConciergeIcon className="h-4 w-4 text-gold" />
+            <BellIcon className="h-4 w-4 text-gold" />
             <h2 className="hotel-label">Ask the desk</h2>
           </div>
 
@@ -275,27 +276,26 @@ export function GuestConciergePanel({ roomNumber }: { roomNumber: string }) {
             </div>
           ) : (
             <div className="mt-3 grid grid-cols-1 gap-2">
-              {requestButtons.map((button) => (
-                <button
-                  key={button.type}
-                  type="button"
-                  onClick={() => setSelectedType(button.type)}
-                  className="staff-mode-action flex items-center gap-3 text-left staff-mode-action-secondary"
-                >
-                  <span className="text-lg" aria-hidden="true">
-                    {button.emoji}
-                  </span>
-                  {button.label}
-                </button>
-              ))}
+              {requestButtons.map((button) => {
+                const Icon = button.Icon;
+                return (
+                  <button
+                    key={button.type}
+                    type="button"
+                    onClick={() => setSelectedType(button.type)}
+                    className="staff-mode-action flex items-center gap-3 text-left staff-mode-action-secondary"
+                  >
+                    <Icon className="h-5 w-5 shrink-0 text-gold" />
+                    {button.label}
+                  </button>
+                );
+              })}
               <button
                 type="button"
                 onClick={() => setShowServices((v) => !v)}
                 className="staff-mode-action flex items-center gap-3 text-left staff-mode-action-secondary"
               >
-                <span className="text-lg" aria-hidden="true">
-                  🏨
-                </span>
+                <HotelIcon className="h-5 w-5 shrink-0 text-gold" />
                 {showServices ? "Hide hotel info" : "Hotel info"}
               </button>
             </div>

@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 
+import { PanelSkeleton } from "@/components/PanelSkeleton";
 import { useToast } from "@/components/Toast";
 import { reservationSourceLabels, roomStatusLabels } from "@/lib/constants";
 import { formatMoney } from "@/lib/demo";
@@ -14,7 +15,7 @@ export function ReportsPanel() {
   const metrics = computeMetrics(state);
 
   if (!hydrated) {
-    return <p className="px-4 text-sm text-muted sm:px-6">Loading reports…</p>;
+    return <PanelSkeleton label="Loading reports" />;
   }
 
   /** Plain wording first, hotel jargon in the hint so owners can still match reports. */

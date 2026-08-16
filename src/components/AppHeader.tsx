@@ -84,7 +84,7 @@ export function AppHeader() {
             href="/ops"
             className="flex min-w-0 items-center gap-2 active:opacity-80 sm:gap-3"
           >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy-deep text-gold shadow-sm sm:h-10 sm:w-10">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-navy-deep text-gold sm:h-10 sm:w-10">
               <HotelIcon className="h-5 w-5" />
             </div>
             <div className="min-w-0">

@@ -34,7 +34,7 @@ export const roomStatusStyles: Record<
   needs_cleaning: {
     card: "bg-orange-50/80 border-orange-300/70 dark:bg-orange-950/25 dark:border-orange-700/50",
     badge: "bg-orange-600/90 text-white dark:bg-orange-700",
-    label: "Dirty — radio HK",
+    label: "Dirty. Call housekeeping",
     shortLabel: "Dirty",
     dot: "bg-orange-500",
   },

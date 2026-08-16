@@ -3,6 +3,7 @@
 import { use } from "react";
 import Link from "next/link";
 
+import { PanelSkeleton } from "@/components/PanelSkeleton";
 import { paymentMethodLabels } from "@/lib/constants";
 import { formatMoney } from "@/lib/demo";
 import { folioBalance } from "@/lib/metrics";
@@ -36,7 +37,7 @@ export default function FolioReceiptPage({
       className="hotel-page-enter mx-auto w-full max-w-2xl px-4 py-8 sm:px-6"
     >
         {!hydrated ? (
-          <p className="text-sm text-muted">Loading receipt…</p>
+          <PanelSkeleton label="Loading receipt" />
         ) : !folio || !reservation ? (
           <div className="hotel-card p-8 text-center">
             <p className="font-display text-xl text-navy">Bill not found</p>

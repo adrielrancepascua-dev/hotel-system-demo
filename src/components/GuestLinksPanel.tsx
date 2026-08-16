@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 
+import { PanelSkeleton } from "@/components/PanelSkeleton";
 import { useToast } from "@/components/Toast";
 import { roomStatusStyles } from "@/lib/constants";
 import { getRoomType } from "@/lib/metrics";
@@ -35,7 +36,7 @@ export function GuestLinksPanel() {
   }
 
   if (!hydrated) {
-    return <p className="px-4 text-sm text-muted sm:px-6">Loading rooms…</p>;
+    return <PanelSkeleton label="Loading rooms" />;
   }
 
   return (

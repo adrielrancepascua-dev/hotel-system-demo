@@ -101,7 +101,7 @@ export function buildDemoRequests(): RequestRecord[] {
       request_type: "late_checkout",
       status: "pending",
       created_at: new Date(Date.now() - 11 * 60 * 1000).toISOString(),
-      notes: "Requesting 2:00 PM checkout — flight from NAIA is at 6 PM",
+      notes: "Requesting 2:00 PM checkout. Flight from NAIA is at 6 PM",
       photo_url: null,
       completed_by_staff_id: null,
       completed_at: null,
